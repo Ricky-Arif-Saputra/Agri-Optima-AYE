@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calculator,
   Plus,
@@ -6,8 +6,14 @@ import {
   TrendingUp,
   Settings,
   LogOut,
-  ChevronRight,
-  AlertCircle
+  AlertCircle,
+  History,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  CheckCircle2,
+  CreditCard
 } from 'lucide-react';
 // @ts-ignore
 import solver from 'javascript-lp-solver';
@@ -22,8 +28,16 @@ interface Constraint {
   id: string;
   name: string;
   coefficients: Record<string, number>;
-  operator: '<=' | '>=' | '=';
+  operator: '<' | '<=' | '=' | '>=' | '>';
   rhs: number;
+}
+
+interface OptimizationResult {
+  id: string;
+  date: string;
+  timestamp: number;
+  resultData: any;
+  variables: Variable[];
 }
 
 interface DashboardViewProps {
@@ -41,8 +55,8 @@ interface DashboardViewProps {
 
 export default function DashboardView({ onLogout }: DashboardViewProps) {
   const [variables, setVariables] = useState<Variable[]>([
-    { id: 'v1', name: 'Jagung (Ha)', profit: 5000000 },
-    { id: 'v2', name: 'Kedelai (Ha)', profit: 4000000 }
+    { id: 'v1', name: 'Jagung', profit: 5000000 },
+    { id: 'v2', name: 'Kedelai', profit: 4000000 }
   ]);
 
   const [constraints, setConstraints] = useState<Constraint[]>([
@@ -62,14 +76,40 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
     }
   ]);
 
-  const [result, setResult] = useState<any>(null);
+  const [history, setHistory] = useState<OptimizationResult[]>([]);
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Payment Modal State
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({ receiptName: '', transactionId: '' });
+
+  // Load history on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('agri_optima_history');
+    if (saved) {
+      try {
+        const parsed: OptimizationResult[] = JSON.parse(saved);
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        
+        // Filter history older than 1 month
+        const validHistory = parsed.filter(item => item.timestamp >= thirtyDaysAgo);
+        setHistory(validHistory);
+
+        // Resave if some were purged
+        if (validHistory.length !== parsed.length) {
+          localStorage.setItem('agri_optima_history', JSON.stringify(validHistory));
+        }
+      } catch (e) {
+        console.error("Failed to load history");
+      }
+    }
+  }, []);
 
   const addVariable = () => {
     const newId = `v${Date.now()}`;
     setVariables([...variables, { id: newId, name: `Tanaman Baru`, profit: 0 }]);
     
-    // Update existing constraints with new variable (default coefficient 0)
     setConstraints(constraints.map(c => ({
       ...c,
       coefficients: { ...c.coefficients, [newId]: 0 }
@@ -78,13 +118,12 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
 
   const removeVariable = (id: string) => {
     if (variables.length <= 1) {
-      setError("Minimal harus ada 1 fungsi tujuan.");
+      setError("Minimal harus ada 1 tanaman (Fungsi Tujuan).");
       setTimeout(() => setError(null), 3000);
       return;
     }
     setVariables(variables.filter(v => v.id !== id));
     
-    // Remove from constraints
     setConstraints(constraints.map(c => {
       const newCoefs = { ...c.coefficients };
       delete newCoefs[id];
@@ -130,9 +169,18 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
     }));
   };
 
-  const calculateOptimization = () => {
+  const triggerOptimizationFlow = () => {
+    setShowPayment(true);
+    setPaymentForm({ receiptName: '', transactionId: '' });
+  };
+
+  const confirmPaymentAndSolve = () => {
+    if (!paymentForm.receiptName || !paymentForm.transactionId) {
+      alert("Harap unggah bukti transfer dan masukkan nomor transaksi.");
+      return;
+    }
+
     try {
-      // Build the model for javascript-lp-solver
       const model: any = {
         optimize: "profit",
         opType: "max",
@@ -140,12 +188,13 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
         variables: {},
       };
 
-      // 1. Setup Constraints in model
       constraints.forEach(c => {
         let maxObj: any = {};
-        if (c.operator === '<=') {
+        // javascript-lp-solver natively supports 'max', 'min', 'equal'
+        // For <, we map to max. For >, we map to min. (Linear programming is continuous, so <= and < are identical in LP solver).
+        if (c.operator === '<=' || c.operator === '<') {
           maxObj = { max: c.rhs };
-        } else if (c.operator === '>=') {
+        } else if (c.operator === '>=' || c.operator === '>') {
           maxObj = { min: c.rhs };
         } else if (c.operator === '=') {
           maxObj = { equal: c.rhs };
@@ -153,7 +202,6 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
         model.constraints[c.id] = maxObj;
       });
 
-      // 2. Setup Variables in model
       variables.forEach(v => {
         const varData: any = { profit: Number(v.profit) };
         constraints.forEach(c => {
@@ -162,21 +210,35 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
         model.variables[v.id] = varData;
       });
 
-      // 3. Solve
       const solution = solver.Solve(model);
-      setResult(solution);
+      
+      const newResult: OptimizationResult = {
+        id: `res_${Date.now()}`,
+        date: new Date().toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' }),
+        timestamp: Date.now(),
+        resultData: solution,
+        variables: [...variables] // Save a snapshot of the variables
+      };
+
+      const newHistory = [newResult, ...history];
+      setHistory(newHistory);
+      localStorage.setItem('agri_optima_history', JSON.stringify(newHistory));
+      
+      // Auto expand the new one
+      setExpandedHistoryId(newResult.id);
+      
+      setShowPayment(false);
       setError(null);
       
     } catch (err: any) {
       console.error(err);
-      setError("Gagal melakukan kalkulasi. Periksa input Anda.");
-      setResult(null);
+      setShowPayment(false);
+      setError("Gagal melakukan kalkulasi. Periksa input variabel/kendala Anda.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f2f4f1] pb-28">
-      {/* TopAppBar */}
+    <div className="min-h-screen bg-[#f2f4f1] pb-28 font-sans">
       <header className="bg-[#002d1a] text-white fixed top-0 w-full z-40 flex justify-between items-center px-4 md:px-12 h-16 shadow-md border-b border-[#1a432f]">
         <div className="flex items-center gap-2">
           <img 
@@ -188,18 +250,15 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
             AGRI OPTIMA
           </h1>
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
-          <button onClick={onLogout} className="text-white hover:text-emerald-200 transition-colors p-2" title="Sign out">
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
+        <button onClick={onLogout} className="text-white hover:text-emerald-200 transition-colors p-2" title="Sign out">
+          <LogOut className="w-5 h-5" />
+        </button>
       </header>
 
-      {/* Main Container */}
-      <main className="pt-20 px-4 md:px-12 max-w-7xl mx-auto">
-        <section className="mt-8 mb-6">
+      <main className="pt-24 px-4 md:px-12 max-w-7xl mx-auto">
+        <section className="mb-6">
           <h2 className="font-serif text-3xl md:text-4xl text-[#002d1a] font-bold">Optimasi Laba</h2>
-          <p className="text-sm text-gray-600 mt-2">Kalkulator program linear (Simplex) untuk memaksimalkan keuntungan berdasarkan kendala sumber daya pertanian Anda.</p>
+          <p className="text-sm text-gray-600 mt-2 max-w-2xl">Kalkulator program linear untuk memaksimalkan keuntungan berdasarkan kendala sumber daya. Tentukan nama tanaman, profit yang diinginkan, dan batas sumber daya lahan Anda.</p>
         </section>
 
         {error && (
@@ -209,56 +268,58 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Inputs */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Form Setup */}
+          <div className="lg:col-span-8 space-y-6">
             
-            {/* 1. Fungsi Tujuan (Objective Function) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#c1c8c1] p-6">
-              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-                <h3 className="font-serif text-xl font-bold text-[#002d1a] flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  Fungsi Tujuan (Maksimalkan Z)
-                </h3>
+            {/* 1. Fungsi Tujuan */}
+            <div className="bg-white rounded-3xl shadow-sm border border-[#c1c8c1] p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-[#002d1a] flex items-center gap-2">
+                    <TrendingUp className="w-6 h-6 text-emerald-600" />
+                    Fungsi Tujuan
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">Maksimalkan keuntungan dari tanaman berikut.</p>
+                </div>
                 <button 
                   onClick={addVariable}
-                  className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-emerald-200"
+                  className="bg-[#cdead0] text-[#1a432f] hover:bg-[#b0dfb5] px-4 py-2 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
                 >
-                  <Plus className="w-4 h-4" /> Tambah Variabel
+                  <Plus className="w-4 h-4" /> Tambah Tanaman
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mb-4">Tentukan variabel apa saja yang ingin dimaksimalkan beserta nilai keuntungannya (Z = c₁X₁ + c₂X₂ ...)</p>
               
               <div className="space-y-4">
-                {variables.map((v, i) => (
-                  <div key={v.id} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                {variables.map((v) => (
+                  <div key={v.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-[#f7f9f7] p-4 rounded-2xl border border-gray-200">
                     <div className="flex-1 w-full">
-                      <label className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Nama Variabel (X{i+1})</label>
+                      <label className="text-[10px] uppercase font-bold text-emerald-800 block mb-1.5 ml-1">Nama Tanaman</label>
                       <input 
                         type="text"
                         value={v.name}
                         onChange={(e) => updateVariable(v.id, 'name', e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded-lg p-2 text-sm text-[#002d1a] focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                        className="w-full bg-white border border-gray-300 rounded-xl p-3 text-sm font-semibold text-[#002d1a] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
                         placeholder="Contoh: Jagung"
                       />
                     </div>
                     <div className="flex-1 w-full">
-                      <label className="text-[10px] uppercase font-bold text-gray-500 block mb-1">Nilai / Koefisien Profit (c{i+1})</label>
+                      <label className="text-[10px] uppercase font-bold text-emerald-800 block mb-1.5 ml-1">Nilai Laba / Unit</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">Rp</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-bold">Rp</span>
                         <input 
                           type="number"
                           value={v.profit}
                           onChange={(e) => updateVariable(v.id, 'profit', Number(e.target.value))}
-                          className="w-full bg-white border border-gray-300 rounded-lg p-2 pl-9 text-sm text-[#002d1a] font-mono focus:ring-2 focus:ring-emerald-500 outline-none transition"
-                          placeholder="5000000"
+                          className="w-full bg-white border border-gray-300 rounded-xl p-3 pl-10 text-sm font-mono font-bold text-[#002d1a] focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition"
                         />
                       </div>
                     </div>
                     <button 
                       onClick={() => removeVariable(v.id)}
-                      className="mt-5 md:mt-0 p-2.5 text-red-500 hover:bg-red-50 rounded-lg transition"
-                      title="Hapus variabel"
+                      className="mt-6 md:mt-0 p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
+                      title="Hapus Tanaman"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -267,78 +328,88 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
               </div>
             </div>
 
-            {/* 2. Fungsi Kendala (Constraints) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-[#c1c8c1] p-6">
-              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-                <h3 className="font-serif text-xl font-bold text-[#002d1a] flex items-center gap-2">
-                  <Settings className="w-5 h-5 text-amber-600" />
-                  Fungsi Kendala
-                </h3>
+            {/* 2. Fungsi Kendala */}
+            <div className="bg-white rounded-3xl shadow-sm border border-[#c1c8c1] p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-[#002d1a] flex items-center gap-2">
+                    <Settings className="w-6 h-6 text-amber-600" />
+                    Fungsi Kendala
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">Batasan sumber daya yang Anda miliki.</p>
+                </div>
                 <button 
                   onClick={addConstraint}
-                  className="bg-amber-50 text-amber-700 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-amber-200"
+                  className="bg-amber-100 text-amber-800 hover:bg-amber-200 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
                 >
                   <Plus className="w-4 h-4" /> Tambah Kendala
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mb-4">Tentukan batasan sumber daya. Masukkan koefisien untuk masing-masing variabel, pilih operator, dan tentukan nilai maksimal/minimal (Konstanta Kanan).</p>
               
               <div className="space-y-6">
-                {constraints.map((c, i) => (
-                  <div key={c.id} className="bg-[#fcfdfc] p-4 rounded-xl border border-gray-200 shadow-sm relative">
-                    <div className="flex justify-between items-center mb-3">
+                {constraints.map((c) => (
+                  <div key={c.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-[0_4px_12px_rgba(0,0,0,0.03)] relative">
+                    <div className="flex justify-between items-center mb-4">
                       <input 
                         type="text"
                         value={c.name}
                         onChange={(e) => updateConstraint(c.id, 'name', e.target.value)}
-                        className="bg-transparent border-b border-dashed border-gray-400 text-sm font-bold text-[#002d1a] focus:outline-none focus:border-emerald-600 px-1"
-                        placeholder="Nama Kendala..."
+                        className="bg-transparent border-b-2 border-dashed border-gray-300 text-lg font-serif font-bold text-[#002d1a] focus:outline-none focus:border-emerald-600 px-1 w-2/3"
+                        placeholder="Nama Kendala (Contoh: Lahan)"
                       />
-                      <button onClick={() => removeConstraint(c.id)} className="text-red-400 hover:text-red-600 transition">
+                      <button onClick={() => removeConstraint(c.id)} className="text-red-300 hover:text-red-600 bg-red-50 p-2 rounded-lg transition">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <div className="flex flex-wrap items-center gap-3 text-sm p-4 bg-[#f2f4f1] rounded-xl border border-gray-300/50">
                       {variables.map((v, vIndex) => (
                         <React.Fragment key={v.id}>
-                          <div className="flex items-center gap-1">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] uppercase font-bold text-gray-500 px-1 truncate max-w-[100px]">{v.name}</span>
                             <input 
                               type="number"
                               value={c.coefficients[v.id] === undefined ? '' : c.coefficients[v.id]}
                               onChange={(e) => updateConstraintCoef(c.id, v.id, Number(e.target.value))}
-                              className="w-20 border border-gray-300 rounded p-1.5 text-center font-mono text-[#002d1a] focus:ring-2 focus:ring-emerald-500 outline-none"
+                              className="w-24 border border-gray-300 rounded-lg p-2 text-center font-mono font-bold text-[#002d1a] focus:ring-2 focus:ring-emerald-500 outline-none"
                               placeholder="0"
                             />
-                            <span className="font-bold text-gray-600 text-xs uppercase" title={v.name}>(X{vIndex+1})</span>
                           </div>
-                          {vIndex < variables.length - 1 && <span className="text-gray-400 font-bold">+</span>}
+                          {vIndex < variables.length - 1 && <span className="text-gray-400 font-bold self-end mb-3 text-lg">+</span>}
                         </React.Fragment>
                       ))}
                       
-                      <select 
-                        value={c.operator}
-                        onChange={(e) => updateConstraint(c.id, 'operator', e.target.value)}
-                        className="border border-gray-300 rounded p-1.5 font-bold text-[#002d1a] bg-gray-50 mx-2 outline-none focus:ring-2 focus:ring-emerald-500"
-                      >
-                        <option value="<=">&le; (Kurang dari)</option>
-                        <option value=">=">&ge; (Lebih dari)</option>
-                        <option value="=">= (Sama dengan)</option>
-                      </select>
+                      <div className="flex flex-col gap-1 mx-2">
+                        <span className="text-[10px] uppercase font-bold text-gray-500 px-1 opacity-0">OP</span>
+                        <select 
+                          value={c.operator}
+                          onChange={(e) => updateConstraint(c.id, 'operator', e.target.value)}
+                          className="border border-gray-300 rounded-lg p-2 font-bold text-[#002d1a] bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="<">&lt;</option>
+                          <option value="<=">&le;</option>
+                          <option value="=">=</option>
+                          <option value=">=">&ge;</option>
+                          <option value=">">&gt;</option>
+                        </select>
+                      </div>
 
-                      <input 
-                        type="number"
-                        value={c.rhs}
-                        onChange={(e) => updateConstraint(c.id, 'rhs', Number(e.target.value))}
-                        className="w-28 border border-gray-300 rounded p-1.5 text-center font-mono font-bold text-[#002d1a] focus:ring-2 focus:ring-emerald-500 outline-none bg-emerald-50"
-                        placeholder="Nilai Kanan"
-                      />
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] uppercase font-bold text-emerald-800 px-1">Konstanta (Limit)</span>
+                        <input 
+                          type="number"
+                          value={c.rhs}
+                          onChange={(e) => updateConstraint(c.id, 'rhs', Number(e.target.value))}
+                          className="w-32 border-2 border-emerald-200 rounded-lg p-2 text-center font-mono font-bold text-[#002d1a] focus:ring-2 focus:ring-emerald-500 outline-none bg-emerald-50"
+                          placeholder="Nilai Kanan"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
                 
                 {constraints.length === 0 && (
-                  <div className="text-center p-6 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-gray-500 text-sm">
+                  <div className="text-center p-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 text-gray-500 text-sm">
                     Belum ada kendala. Silakan tambah kendala.
                   </div>
                 )}
@@ -346,74 +417,189 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
             </div>
 
             <button 
-              onClick={calculateOptimization}
-              className="w-full bg-[#1a432f] hover:bg-[#002d1a] text-emerald-200 font-bold text-lg py-4 rounded-2xl shadow-lg transition-all flex justify-center items-center gap-3 border border-emerald-900 group"
+              onClick={triggerOptimizationFlow}
+              className="w-full bg-gradient-to-r from-[#1a432f] to-[#002d1a] hover:from-[#002d1a] hover:to-[#000000] text-emerald-100 font-bold text-lg py-5 rounded-3xl shadow-xl transition-all flex justify-center items-center gap-3 border border-emerald-900 group"
             >
-              <Calculator className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              <Calculator className="w-6 h-6 group-hover:rotate-12 transition-transform" />
               HITUNG OPTIMASI
             </button>
           </div>
 
-          {/* Right Column: Results */}
-          <div>
-            <div className="bg-[#002d1a] text-white rounded-2xl shadow-xl border border-[#1a432f] overflow-hidden sticky top-24">
-              <div className="p-6 border-b border-[#1a432f] bg-gradient-to-br from-[#002d1a] to-[#0a4025]">
-                <h3 className="font-serif text-xl font-bold flex items-center gap-2 mb-1">
-                  <Calculator className="w-5 h-5 text-emerald-400" />
-                  Hasil Optimasi
-                </h3>
-                <p className="text-emerald-200/70 text-xs">Simplex Algorithm Result</p>
-              </div>
+          {/* Right Column: History Panel */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-3xl shadow-lg border border-[#c1c8c1] sticky top-24 overflow-hidden flex flex-col max-h-[85vh]">
               
-              <div className="p-6">
-                {!result ? (
-                  <div className="text-center py-12 opacity-50">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-3 text-emerald-300" />
-                    <p className="text-sm">Klik Hitung Optimasi untuk melihat hasil program linear.</p>
-                  </div>
-                ) : !result.feasible ? (
-                  <div className="bg-red-900/30 border border-red-500/50 p-4 rounded-xl text-center">
-                    <h4 className="text-red-400 font-bold mb-1">Tidak Layak (Infeasible)</h4>
-                    <p className="text-xs text-red-200/80">Kendala yang Anda berikan saling bertentangan sehingga tidak ditemukan solusi.</p>
+              <div className="p-6 bg-[#002d1a] text-white">
+                <h3 className="font-serif text-xl font-bold flex items-center gap-2">
+                  <History className="w-5 h-5 text-emerald-400" />
+                  Riwayat Optimasi
+                </h3>
+                <p className="text-emerald-200/70 text-xs mt-1">Daftar perhitungan yang aktif (Berlaku 1 Bulan).</p>
+              </div>
+
+              <div className="p-4 flex-1 overflow-y-auto bg-gray-50/50">
+                {history.length === 0 ? (
+                  <div className="text-center py-16 opacity-40">
+                    <Calendar className="w-12 h-12 mx-auto mb-3 text-emerald-900" />
+                    <p className="text-sm font-semibold">Belum ada hasil optimasi.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6 animate-fade-in">
-                    <div>
-                      <h4 className="text-[10px] uppercase tracking-widest text-emerald-300/80 mb-1 font-bold">Laba Maksimal (Z)</h4>
-                      <div className="text-3xl font-serif font-extrabold text-emerald-300 drop-shadow-md">
-                        Rp {result.result?.toLocaleString('id-ID')}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="text-[10px] uppercase tracking-widest text-emerald-300/80 font-bold border-b border-[#1a432f] pb-2">Nilai Keputusan (X)</h4>
-                      {variables.map((v, i) => {
-                        const val = result[v.id] || 0;
-                        return (
-                          <div key={v.id} className="flex justify-between items-center bg-[#1a432f]/50 p-3 rounded-lg border border-[#1a432f]">
-                            <div>
-                              <div className="text-sm font-bold text-white">{v.name}</div>
-                              <div className="text-[10px] text-emerald-200/60">X{i+1}</div>
+                  <div className="space-y-4">
+                    {history.map((item) => {
+                      const isExpanded = expandedHistoryId === item.id;
+                      const res = item.resultData;
+                      
+                      return (
+                        <div key={item.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+                          
+                          {/* Header Accordion */}
+                          <button 
+                            onClick={() => setExpandedHistoryId(isExpanded ? null : item.id)}
+                            className={`w-full p-4 flex justify-between items-center text-left transition-colors ${isExpanded ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="bg-[#1a432f] p-2 rounded-lg text-white">
+                                <CheckCircle2 className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-0.5">Tanggal Optimasi</span>
+                                <span className="font-serif font-bold text-[#002d1a]">{item.date}</span>
+                              </div>
                             </div>
-                            <div className="font-mono text-xl font-bold text-white">{val}</div>
-                          </div>
-                        )
-                      })}
-                    </div>
+                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                          </button>
+
+                          {/* Expanded Details */}
+                          {isExpanded && (
+                            <div className="p-5 border-t border-emerald-100 bg-white">
+                              {!res.feasible ? (
+                                <div className="bg-red-50 text-red-700 p-3 rounded-xl border border-red-200 text-sm">
+                                  <strong>Tidak Layak (Infeasible)</strong>: Kombinasi kendala tidak memungkinkan untuk dihitung solusinya.
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="mb-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                                    <h4 className="text-[10px] uppercase font-bold text-emerald-800 mb-1">Total Laba Maksimal</h4>
+                                    <div className="text-2xl font-serif font-bold text-[#1a432f]">
+                                      Rp {res.result?.toLocaleString('id-ID')}
+                                    </div>
+                                  </div>
+                                  
+                                  <h4 className="text-[10px] uppercase font-bold text-gray-500 mb-2 border-b pb-1">Detail Produksi</h4>
+                                  <div className="space-y-2 mb-4">
+                                    {item.variables.map((v) => {
+                                      const val = res[v.id] || 0;
+                                      return (
+                                        <div key={v.id} className="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                                          <span className="text-sm font-semibold text-gray-700">{v.name}</span>
+                                          <div className="flex items-baseline gap-1">
+                                            <span className="font-mono font-bold text-lg text-[#1a432f]">{val}</span>
+                                            <span className="text-[10px] text-gray-500 font-bold uppercase">Unit</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+
+                                  <p className="text-xs text-gray-600 bg-gray-100 p-3 rounded-lg">
+                                    Berdasarkan optimasi, menanam <strong>{item.variables.filter(v => res[v.id]).map(v => `${res[v.id] || 0} unit ${v.name}`).join(' dan ')}</strong> adalah strategi terbaik untuk menghasilkan profit <strong>Rp {res.result?.toLocaleString('id-ID')}</strong> dengan sumber daya Anda saat ini.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-              {result && result.feasible && (
-                <div className="bg-[#1a432f] p-4 text-xs text-emerald-100/70 leading-relaxed border-t border-[#002d1a]">
-                  <strong className="text-emerald-300 block mb-1">Kesimpulan:</strong>
-                  Untuk mencapai laba maksimal sebesar <strong>Rp {result.result?.toLocaleString('id-ID')}</strong>, 
-                  Anda harus memproduksi {variables.filter(v => result[v.id]).map(v => ` ${result[v.id] || 0} unit ${v.name}`).join(' dan ')}.
-                </div>
-              )}
             </div>
           </div>
         </div>
       </main>
+
+      {/* Payment Gateway Modal (QRIS) */}
+      {showPayment && (
+        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
+            
+            <div className="bg-[#1a432f] text-white p-5 text-center relative">
+              <h3 className="font-serif text-xl font-bold">Pembayaran Layanan</h3>
+              <p className="text-emerald-200 text-xs">Selesaikan pembayaran untuk melihat hasil optimasi</p>
+              <button 
+                onClick={() => setShowPayment(false)}
+                className="absolute top-4 right-4 text-emerald-200 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <span className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1">Nominal Pembayaran</span>
+                <span className="text-4xl font-serif font-extrabold text-[#002d1a]">Rp 10.000</span>
+              </div>
+
+              {/* QRIS Placeholder */}
+              <div className="bg-gray-50 border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center mb-6">
+                <div className="w-48 h-48 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-center relative overflow-hidden">
+                  {/* Using a placeholder SVG for QRIS to look legit, but you can swap the img src to "QRIS.jpeg" locally */}
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=AGRIOPTIMA-PAYMENT-10000" alt="QRIS" className="w-full h-full object-cover" />
+                  <div className="absolute top-0 bg-[#002d1a] w-full text-center text-[10px] text-white font-bold py-1">QRIS STANDAR NASIONAL</div>
+                </div>
+                <p className="text-xs text-gray-400 mt-3 font-medium">Scan menggunakan m-banking atau e-wallet</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-600 block mb-1.5">Unggah Bukti Transfer (JPEG/PNG)</label>
+                  <label className="border border-gray-300 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition text-sm text-gray-500 font-medium">
+                    <Upload className="w-5 h-5 text-emerald-600" />
+                    {paymentForm.receiptName || "Pilih File Gambar..."}
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => setPaymentForm({...paymentForm, receiptName: e.target.files?.[0]?.name || ''})}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-gray-600 block mb-1.5">Nomor Transaksi / Referensi</label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input 
+                      type="text" 
+                      value={paymentForm.transactionId}
+                      onChange={(e) => setPaymentForm({...paymentForm, transactionId: e.target.value})}
+                      placeholder="Contoh: TR-99882233"
+                      className="w-full border border-gray-300 rounded-xl py-3 pl-10 pr-3 focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+              <button 
+                onClick={() => setShowPayment(false)}
+                className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-100 transition"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={confirmPaymentAndSolve}
+                className="flex-1 py-3 text-sm font-bold text-emerald-950 bg-[#cdead0] rounded-xl hover:bg-[#b0dfb5] transition flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-5 h-5" /> Bayar & Lihat Hasil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
