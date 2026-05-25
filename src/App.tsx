@@ -107,7 +107,7 @@ export default function App() {
           }`}
         >
           <LayoutDashboard className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px] tracking-tight">Dashboard</span>
+          <span className="text-[10px] tracking-tight">Optimasi Laba</span>
         </button>
 
         {/* Farm button */}
