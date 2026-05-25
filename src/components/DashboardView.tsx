@@ -521,10 +521,10 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
 
       {/* Payment Gateway Modal (QRIS) */}
       {showPayment && (
-        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-fade-in">
+        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl animate-fade-in my-auto max-h-[90vh] flex flex-col">
             
-            <div className="bg-[#1a432f] text-white p-5 text-center relative">
+            <div className="bg-[#1a432f] text-white p-5 text-center relative shrink-0 rounded-t-3xl">
               <h3 className="font-serif text-xl font-bold">Pembayaran Layanan</h3>
               <p className="text-emerald-200 text-xs">Selesaikan pembayaran untuk melihat hasil optimasi</p>
               <button 
@@ -535,18 +535,17 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto">
               <div className="text-center mb-6">
                 <span className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1">Nominal Pembayaran</span>
                 <span className="text-4xl font-serif font-extrabold text-[#002d1a]">Rp 10.000</span>
               </div>
 
-              {/* QRIS Placeholder */}
+              {/* QRIS Image */}
               <div className="bg-gray-50 border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center mb-6">
-                <div className="w-48 h-48 bg-white border border-gray-200 rounded-xl shadow-sm flex items-center justify-center relative overflow-hidden">
-                  {/* Using a placeholder SVG for QRIS to look legit, but you can swap the img src to "QRIS.jpeg" locally */}
-                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=AGRIOPTIMA-PAYMENT-10000" alt="QRIS" className="w-full h-full object-cover" />
-                  <div className="absolute top-0 bg-[#002d1a] w-full text-center text-[10px] text-white font-bold py-1">QRIS STANDAR NASIONAL</div>
+                <div className="w-full max-w-xs bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col items-center justify-center overflow-hidden">
+                  <div className="bg-[#002d1a] w-full text-center text-[10px] text-white font-bold py-1">QRIS STANDAR NASIONAL</div>
+                  <img src="/QRIS.jpeg" alt="QRIS" className="w-full h-auto object-contain" />
                 </div>
                 <p className="text-xs text-gray-400 mt-3 font-medium">Scan menggunakan m-banking atau e-wallet</p>
               </div>
@@ -582,7 +581,7 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3">
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3 shrink-0 rounded-b-3xl">
               <button 
                 onClick={() => setShowPayment(false)}
                 className="flex-1 py-3 text-sm font-bold text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-100 transition"
