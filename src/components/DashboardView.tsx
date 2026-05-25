@@ -15,8 +15,7 @@ import {
   CheckCircle2,
   CreditCard
 } from 'lucide-react';
-// @ts-ignore
-import solver from 'javascript-lp-solver';
+// QRIS image will be loaded from public folder via absolute path
 
 interface Variable {
   id: string;
@@ -521,7 +520,7 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
 
       {/* Payment Gateway Modal (QRIS) */}
       {showPayment && (
-        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-hidden">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl animate-fade-in my-auto max-h-[90vh] flex flex-col">
             
             <div className="bg-[#1a432f] text-white p-5 text-center relative shrink-0 rounded-t-3xl">
@@ -535,7 +534,7 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto">
+            <div className="p-6">
               <div className="text-center mb-6">
                 <span className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1">Nominal Pembayaran</span>
                 <span className="text-4xl font-serif font-extrabold text-[#002d1a]">Rp 10.000</span>
@@ -545,7 +544,7 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
               <div className="bg-gray-50 border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center mb-6">
                 <div className="w-full max-w-xs bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col items-center justify-center overflow-hidden">
                   <div className="bg-[#002d1a] w-full text-center text-[10px] text-white font-bold py-1">QRIS STANDAR NASIONAL</div>
-                  <img src="/QRIS.jpeg" alt="QRIS" className="w-full h-auto object-contain" />
+                  <img src={QRISImg} alt="QRIS" className="w-full h-auto object-contain" />
                 </div>
                 <p className="text-xs text-gray-400 mt-3 font-medium">Scan menggunakan m-banking atau e-wallet</p>
               </div>
