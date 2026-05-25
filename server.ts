@@ -141,8 +141,16 @@ I am your AI Agronomist Copilot. I can assist you with:
 Ask me about: *"How should I manage Plot B-12 moisture?"* or *"When is the best time to release my corn inventory?"*`;
 }
 
+// Export the app for Vercel Serverless
+export default app;
+
 // Vite middleware for development vs static asset serving for production
 async function startServer() {
+  // If deployed on Vercel, Vercel handles static routing and listening
+  if (process.env.VERCEL) {
+    return;
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
