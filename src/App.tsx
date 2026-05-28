@@ -6,7 +6,7 @@ import {
   Sprout, 
   Store, 
   Settings as SettingsIcon,
-  HelpCircle
+  Home
 } from 'lucide-react';
 import { CartItem } from './types';
 import LoginView from './components/LoginView';
@@ -14,12 +14,13 @@ import DashboardView from './components/DashboardView';
 import FarmView from './components/FarmView';
 import MarketView from './components/MarketView';
 import SettingsView from './components/SettingsView';
+import HomeView from './components/HomeView';
 import AiAdvisor from './components/AiAdvisor';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [userName, setUserName] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>('home');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -68,6 +69,9 @@ export default function App() {
       
       {/* Dynamic Tab Renderer */}
       <div className="fade-in-container pb-8">
+        {activeTab === 'home' && (
+          <HomeView onNavigateToTab={handleNavigateToTab} userName={userName} />
+        )}
         {activeTab === 'dashboard' && (
           <DashboardView 
             onLogout={handleLogout}
@@ -116,6 +120,18 @@ export default function App() {
       <nav className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-300 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex justify-around items-center py-2.5 px-4 pb-safe">
         
         {/* Dashboard button */}
+        {/* Home button */}
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
+            activeTab === 'home'
+              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
+              : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
+          }`}
+        >
+          <HelpCircle className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Home</span>
+        </button>
         <button 
           onClick={() => setActiveTab('dashboard')}
           className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
