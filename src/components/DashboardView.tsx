@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   CreditCard
 } from 'lucide-react';
+import solver from 'javascript-lp-solver';
 // QRIS image will be loaded from public folder via absolute path
 
 interface Variable {

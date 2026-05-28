@@ -38,62 +38,67 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
   const [selected, setSelected] = useState<Article | null>(null);
 
   return (
-    <div className="p-4 min-h-[calc(100vh-80px)] bg-[#f0f5f9] flex flex-col gap-6">
-      {/* Hero Banner */}
-      <div className="relative h-64 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-xl overflow-hidden mb-6">
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
-        <div className="relative z-10 p-8 text-white">
-          <h1 className="text-4xl font-extrabold">Berita Pertanian Terbaru</h1>
-          <p className="mt-2 text-lg">Update terkini tentang inovasi, teknologi, dan pasar pertanian.</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-emerald-100 to-emerald-50 p-6 font-sans text-gray-800">
+      {/* Hero */}
+      <section className="text-center mb-8">
+        <h1 className="text-4xl font-extrabold text-emerald-900 mb-2">Berita Pertanian Terbaru</h1>
+        <p className="text-lg text-emerald-800">Inovasi, teknologi, dan pasar pertanian terbaru untuk Anda.</p>
+      </section>
 
-      {/* Greeting */}
-      <h1 className="text-2xl font-bold text-gray-800">Selamat datang, {userName}!</h1>
-      <p className="text-sm text-gray-600">Berita terbaru pertanian</p>
-
-      {/* Featured Carousel */}
-      <div className="flex gap-4 overflow-x-auto pb-4 mb-6 scroll-smooth snap-x snap-mandatory">
-        {mockArticles.slice(0, 3).map((article) => (
-          <button
-            key={article.id}
-            onClick={() => setSelected(article)}
-            className="min-w-[300px] flex-shrink-0 relative overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg border border-white/20 hover:shadow-xl transition-transform transform hover:scale-105 snap-start"
-          >
-            <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
-              <h2 className="text-white text-lg font-semibold">{article.title}</h2>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Grid of Articles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Carousel */}
+      <section className="flex gap-4 overflow-x-auto pb-4 mb-8 snap-x snap-mandatory">
         {mockArticles.map((article) => (
           <button
             key={article.id}
             onClick={() => setSelected(article)}
-            className="relative overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg border border-white/20 hover:shadow-xl transition-transform transform hover:scale-105"
+            className="snap-start min-w-[280px] flex-shrink-0 bg-white/30 backdrop-blur-lg rounded-xl border border-emerald-200 hover:shadow-xl transition-transform transform hover:scale-105 overflow-hidden"
           >
-            <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
-              <h2 className="text-white text-lg font-semibold">{article.title}</h2>
+            <img src={article.image} alt={article.title} className="w-full h-40 object-cover" />
+            <div className="p-3">
+              <h2 className="text-emerald-900 font-semibold">{article.title}</h2>
             </div>
           </button>
         ))}
-      </div>
+      </section>
 
-      {/* Detail Modal */}
+      {/* Profit Chart Placeholder */}
+      <section className="mb-8">
+        <h2 className="text-2xl font-bold text-emerald-900 mb-4">Grafik Potensi Laba</h2>
+        {/* Simple bar chart using CSS */}
+        <div className="flex items-end space-x-4 h-40">
+          <div className="flex-1 bg-emerald-600 rounded-t" style={{ height: '70%' }}></div>
+          <div className="flex-1 bg-emerald-500 rounded-t" style={{ height: '50%' }}></div>
+          <div className="flex-1 bg-emerald-400 rounded-t" style={{ height: '30%' }}></div>
+        </div>
+        <p className="text-sm text-emerald-700 mt-2">* Contoh grafik, nanti terhubung dengan hasil optimasi.</p>
+      </section>
+
+      {/* Articles Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {mockArticles.map((article) => (
+          <button
+            key={article.id}
+            onClick={() => setSelected(article)}
+            className="bg-white/30 backdrop-blur-lg rounded-xl border border-emerald-200 hover:shadow-xl transition-transform transform hover:scale-105 overflow-hidden"
+          >
+            <img src={article.image} alt={article.title} className="w-full h-40 object-cover" />
+            <div className="p-3">
+              <h2 className="text-emerald-900 font-semibold">{article.title}</h2>
+            </div>
+          </button>
+        ))}
+      </section>
+
+      {/* Modal */}
       {selected && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white/90 backdrop-blur-md rounded-xl max-w-3xl w-full max-h-full overflow-y-auto p-6 relative">
+          <div className="bg-white/90 backdrop-blur-md rounded-xl max-w-2xl w-full max-h-full overflow-y-auto p-6 relative">
             <button onClick={() => setSelected(null)} className="absolute top-4 right-4 text-gray-600 hover:text-gray-800">
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">{selected.title}</h2>
-            <img src={selected.image} alt={selected.title} className="w-full h-64 object-cover rounded-md mb-4" />
-            <p className="text-gray-700 whitespace-pre-line mb-4">{selected.content}</p>
+            <h2 className="text-2xl font-bold mb-4 text-emerald-900">{selected.title}</h2>
+            <img src={selected.image} alt={selected.title} className="w-full h-56 object-cover rounded-md mb-4" />
+            <p className="whitespace-pre-line mb-4 text-gray-700">{selected.content}</p>
             {selected.videoUrl && (
               <div className="aspect-video mb-4">
                 <iframe
@@ -107,7 +112,7 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
             )}
             {selected.related && selected.related.length > 0 && (
               <>
-                <h3 className="text-xl font-semibold mt-4 mb-2 text-gray-800">Berita Terkait</h3>
+                <h3 className="text-xl font-semibold mt-4 mb-2 text-emerald-900">Berita Terkait</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {selected.related.map((rel) => (
                     <button
