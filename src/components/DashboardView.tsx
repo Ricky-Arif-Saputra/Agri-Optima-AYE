@@ -476,33 +476,44 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
                                   <strong>Tidak Layak (Infeasible)</strong>: Kombinasi kendala tidak memungkinkan untuk dihitung solusinya.
                                 </div>
                               ) : (
-                                <div>
-                                  <div className="mb-4 bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                                    <h4 className="text-[10px] uppercase font-bold text-emerald-800 mb-1">Total Laba Maksimal</h4>
-                                    <div className="text-2xl font-serif font-bold text-[#1a432f]">
-                                      Rp {res.result?.toLocaleString('id-ID')}
+                                <div className="space-y-6">
+                                  <div className="bg-gradient-to-br from-[#002d1a] to-[#1a432f] rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-400/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                                    <div className="absolute bottom-0 left-0 w-40 h-40 bg-yellow-400/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
+                                    
+                                    <div className="relative z-10 space-y-8">
+                                      {/* Total Profit Box */}
+                                      <div className="text-center space-y-3">
+                                        <div className="inline-flex items-center gap-2 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-400/20 backdrop-blur-md">
+                                          <p className="text-emerald-300 font-bold text-[10px] tracking-widest uppercase">Total Laba Maksimal</p>
+                                        </div>
+                                        <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-xl font-serif">
+                                          Rp {res.result?.toLocaleString('id-ID')}
+                                        </h2>
+                                      </div>
+
+                                      {/* Production Details */}
+                                      <div className="pt-6 border-t border-emerald-500/20">
+                                        <h3 className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-[0.3em] mb-4 text-center">Detail Produksi</h3>
+                                        <div className="space-y-3">
+                                          {item.variables.map((v) => {
+                                            const val = res[v.id] || 0;
+                                            return (
+                                              <div key={v.id} className="bg-white/5 rounded-2xl p-4 flex justify-between items-center border border-white/5 backdrop-blur-lg hover:bg-white/10 hover:border-emerald-500/30 transition-all shadow-inner">
+                                                <p className="text-base font-bold text-slate-200">{v.name}</p>
+                                                <p className="text-2xl font-black text-white font-mono">{val} <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest ml-1 font-sans">Unit</span></p>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+
+                                      {/* Summary Text */}
+                                      <div className="bg-black/20 rounded-[1.5rem] p-5 text-xs text-emerald-100/80 leading-relaxed border border-white/5 backdrop-blur-xl shadow-inner text-center">
+                                        Berdasarkan kalkulasi, menanam <strong>{item.variables.filter(v => res[v.id]).map(v => `${res[v.id] || 0} unit ${v.name}`).join(' dan ')}</strong> adalah strategi paling efisien untuk menghasilkan profit <span className="font-black text-yellow-400 font-serif">Rp {res.result?.toLocaleString('id-ID')}</span>.
+                                      </div>
                                     </div>
                                   </div>
-                                  
-                                  <h4 className="text-[10px] uppercase font-bold text-gray-500 mb-2 border-b pb-1">Detail Produksi</h4>
-                                  <div className="space-y-2 mb-4">
-                                    {item.variables.map((v) => {
-                                      const val = res[v.id] || 0;
-                                      return (
-                                        <div key={v.id} className="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                                          <span className="text-sm font-semibold text-gray-700">{v.name}</span>
-                                          <div className="flex items-baseline gap-1">
-                                            <span className="font-mono font-bold text-lg text-[#1a432f]">{val}</span>
-                                            <span className="text-[10px] text-gray-500 font-bold uppercase">Unit</span>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-
-                                  <p className="text-xs text-gray-600 bg-gray-100 p-3 rounded-lg">
-                                    Berdasarkan optimasi, menanam <strong>{item.variables.filter(v => res[v.id]).map(v => `${res[v.id] || 0} unit ${v.name}`).join(' dan ')}</strong> adalah strategi terbaik untuk menghasilkan profit <strong>Rp {res.result?.toLocaleString('id-ID')}</strong> dengan sumber daya Anda saat ini.
-                                  </p>
                                 </div>
                               )}
                             </div>
@@ -522,6 +533,7 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
       {showPayment && (
         <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-hidden">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl animate-fade-in flex flex-col">
+
             
             <div className="bg-[#1a432f] text-white p-5 text-center relative shrink-0 rounded-t-3xl">
               <h3 className="font-serif text-xl font-bold">Pembayaran Layanan</h3>
@@ -542,9 +554,9 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
 
               {/* QRIS Image */}
               <div className="bg-gray-50 border-2 border-dashed border-emerald-200 rounded-2xl p-4 flex flex-col items-center justify-center mb-6">
-                <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col items-center justify-center overflow-hidden">
+                <div className="w-full max-w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col items-center justify-center overflow-hidden">
                   <div className="bg-[#002d1a] w-full text-center text-[10px] text-white font-bold py-1">QRIS STANDAR NASIONAL</div>
-                                      <img src="/QRIS.jpeg" alt="QRIS" className="w-full h-auto object-contain" />
+                                      <img src="/QRIS.jpeg" alt="QRIS" className="w-full h-auto object-cover" />
                 </div>
                 <p className="text-xs text-gray-400 mt-3 font-medium">Scan menggunakan m-banking atau e-wallet</p>
               </div>
