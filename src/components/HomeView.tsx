@@ -39,17 +39,26 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
 
   return (
     <div className="p-4 min-h-[calc(100vh-80px)] bg-[#f0f5f9] flex flex-col gap-6">
-      {/* Header */}
+      {/* Hero Banner */}
+      <div className="relative h-64 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-xl overflow-hidden mb-6">
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
+        <div className="relative z-10 p-8 text-white">
+          <h1 className="text-4xl font-extrabold">Berita Pertanian Terbaru</h1>
+          <p className="mt-2 text-lg">Update terkini tentang inovasi, teknologi, dan pasar pertanian.</p>
+        </div>
+      </div>
+
+      {/* Greeting */}
       <h1 className="text-2xl font-bold text-gray-800">Selamat datang, {userName}!</h1>
       <p className="text-sm text-gray-600">Berita terbaru pertanian</p>
 
-      {/* Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {mockArticles.map((article) => (
+      {/* Featured Carousel */}
+      <div className="flex gap-4 overflow-x-auto pb-4 mb-6 scroll-smooth snap-x snap-mandatory">
+        {mockArticles.slice(0, 3).map((article) => (
           <button
             key={article.id}
             onClick={() => setSelected(article)}
-            className="relative overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg border border-white/20 hover:shadow-xl transition-shadow"
+            className="min-w-[300px] flex-shrink-0 relative overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg border border-white/20 hover:shadow-xl transition-transform transform hover:scale-105 snap-start"
           >
             <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
@@ -59,9 +68,25 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
         ))}
       </div>
 
-      {/* Modal / Detail View */}
+      {/* Grid of Articles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {mockArticles.map((article) => (
+          <button
+            key={article.id}
+            onClick={() => setSelected(article)}
+            className="relative overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg border border-white/20 hover:shadow-xl transition-transform transform hover:scale-105"
+          >
+            <img src={article.image} alt={article.title} className="w-full h-48 object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
+              <h2 className="text-white text-lg font-semibold">{article.title}</h2>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Detail Modal */}
       {selected && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white/90 backdrop-blur-md rounded-xl max-w-3xl w-full max-h-full overflow-y-auto p-6 relative">
             <button onClick={() => setSelected(null)} className="absolute top-4 right-4 text-gray-600 hover:text-gray-800">
               <X size={24} />
@@ -77,7 +102,7 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="w-full h-full rounded-md"
-                />
+                ></iframe>
               </div>
             )}
             {selected.related && selected.related.length > 0 && (
@@ -106,6 +131,3 @@ export default function HomeView({ userName, onNavigateToTab }: { userName: stri
     </div>
   );
 }
-
-
-
