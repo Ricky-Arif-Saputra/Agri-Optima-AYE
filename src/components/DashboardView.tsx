@@ -538,8 +538,8 @@ export default function DashboardView({ onLogout, userName, onNavigateToTab, yie
 
       {/* Payment Gateway Modal (QRIS) */}
       {showPayment && (
-        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-hidden">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl animate-fade-in flex flex-col">
+        <div className="fixed inset-0 bg-[#002d1a]/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
 
             
             <div className="bg-[#1a432f] text-white p-5 text-center relative shrink-0 rounded-t-3xl">
@@ -553,7 +553,7 @@ export default function DashboardView({ onLogout, userName, onNavigateToTab, yie
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto custom-scrollbar">
               <div className="text-center mb-6">
                 <span className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1">Nominal Pembayaran</span>
                 <span className="text-4xl font-serif font-extrabold text-[#002d1a]">Rp 10.000</span>
