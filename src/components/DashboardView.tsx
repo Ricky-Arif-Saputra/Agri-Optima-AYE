@@ -449,23 +449,26 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
                       const res = item.resultData;
                       
                       return (
-                        <div key={item.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+                        <div key={item.id} className={`group border rounded-[1.5rem] overflow-hidden transition-all duration-500 ${isExpanded ? 'bg-white border-emerald-300 shadow-[0_12px_40px_-15px_rgba(16,185,129,0.3)] scale-[1.02] z-10 relative' : 'bg-gradient-to-br from-gray-50 to-white border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-200'}`}>
                           
                           {/* Header Accordion */}
                           <button 
                             onClick={() => setExpandedHistoryId(isExpanded ? null : item.id)}
-                            className={`w-full p-4 flex justify-between items-center text-left transition-colors ${isExpanded ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}
+                            className={`w-full p-5 flex justify-between items-center text-left transition-colors relative ${isExpanded ? 'bg-gradient-to-r from-emerald-50/80 to-transparent' : 'hover:bg-emerald-50/30'}`}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="bg-[#1a432f] p-2 rounded-lg text-white">
-                                <CheckCircle2 className="w-4 h-4" />
+                            {isExpanded && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 rounded-l-[1.5rem]"></div>}
+                            <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-2xl transition-all duration-500 flex items-center justify-center ${isExpanded ? 'bg-gradient-to-br from-emerald-400 to-[#1a432f] text-white shadow-lg shadow-emerald-500/40 rotate-12 scale-110' : 'bg-white border border-gray-200 text-gray-400 group-hover:text-emerald-500 group-hover:border-emerald-200 group-hover:bg-emerald-50'}`}>
+                                <CheckCircle2 className="w-5 h-5" />
                               </div>
                               <div>
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-0.5">Tanggal Optimasi</span>
-                                <span className="font-serif font-bold text-[#002d1a]">{item.date}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-widest block mb-1 transition-colors ${isExpanded ? 'text-emerald-600' : 'text-gray-400'}`}>Sesi Optimasi</span>
+                                <span className="font-sans font-black text-[#002d1a] text-sm tracking-tight">{item.date}</span>
                               </div>
                             </div>
-                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                            <div className={`p-2 rounded-full transition-all duration-300 ${isExpanded ? 'bg-white shadow-md rotate-180' : 'bg-gray-50 group-hover:bg-emerald-100'}`}>
+                              <ChevronDown className={`w-4 h-4 transition-colors ${isExpanded ? 'text-emerald-600' : 'text-gray-400 group-hover:text-emerald-600'}`} />
+                            </div>
                           </button>
 
                           {/* Expanded Details */}
