@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLo
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAh1y1fn0VxL_juhfdsIKCyePyNSeR6z6k",
-  authDomain: "agri-optima-2026.firebaseapp.com",
-  projectId: "agri-optima-2026",
-  storageBucket: "agri-optima-2026.firebasestorage.app",
-  messagingSenderId: "263003282029",
-  appId: "1:263003282029:web:6e64c721ca62abdd69bd64"
+  apiKey: "AIzaSyB4Dc7QtrpiCOQcBdtR1lgQTU1upklE2IM",
+  authDomain: "agri-optima.firebaseapp.com",
+  projectId: "agri-optima",
+  storageBucket: "agri-optima.firebasestorage.app",
+  messagingSenderId: "1005394692696",
+  appId: "1:1005394692696:web:f731c5201cf63326bc582d"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
