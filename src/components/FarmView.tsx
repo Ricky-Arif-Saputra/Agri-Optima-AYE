@@ -18,6 +18,7 @@ import { Plot, Task } from '../types';
 
 interface FarmViewProps {
   onNavigateToTab: (tab: string) => void;
+  userName: string;
   efficiencyVal: number;
   setEfficiencyVal: (val: number) => void;
 }

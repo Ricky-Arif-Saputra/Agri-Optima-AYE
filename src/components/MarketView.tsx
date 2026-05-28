@@ -15,6 +15,7 @@ import { Product, CartItem } from '../types';
 
 interface MarketViewProps {
   onNavigateToTab: (tab: string) => void;
+  userName: string;
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }

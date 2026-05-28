@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './lib/firebase';
 import { 
   LayoutDashboard, 
   Sprout, 
@@ -15,9 +17,21 @@ import SettingsView from './components/SettingsView';
 import AiAdvisor from './components/AiAdvisor';
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Logged in by default so the user immediately sees the rich screens
-  const [userEmail, setUserEmail] = useState<string>('rickysaputra12345168@gmail.com');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setUserName(user.displayName || user.email?.split('@')[0] || 'Pengguna');
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Unified global parameters state (highly interactive telemetry indicators)
   const [yieldVal, setYieldVal] = useState<number>(42.8);
@@ -29,13 +43,14 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   // Navigation handlers
-  const handleLoginSuccess = (email: string) => {
-    setUserEmail(email);
+  const handleLoginSuccess = (email: string, displayName?: string) => {
+    setUserName(displayName || email.split('@')[0]);
     setIsLoggedIn(true);
     setActiveTab('dashboard');
   };
 
   const handleLogout = () => {
+    auth.signOut();
     setIsLoggedIn(false);
     setCart([]);
   };
@@ -57,6 +72,7 @@ export default function App() {
           <DashboardView 
             onLogout={handleLogout}
             onNavigateToTab={handleNavigateToTab}
+            userName={userName}
             yieldVal={yieldVal}
             setYieldVal={setYieldVal}
             roiVal={roiVal}
@@ -70,6 +86,7 @@ export default function App() {
         {activeTab === 'farm' && (
           <FarmView 
             onNavigateToTab={handleNavigateToTab}
+            userName={userName}
             efficiencyVal={efficiencyVal}
             setEfficiencyVal={setEfficiencyVal}
           />
@@ -77,13 +94,14 @@ export default function App() {
         {activeTab === 'market' && (
           <MarketView 
             onNavigateToTab={handleNavigateToTab}
+            userName={userName}
             cart={cart}
             setCart={setCart}
           />
         )}
         {activeTab === 'settings' && (
           <SettingsView 
-            userEmail={userEmail}
+            userName={userName}
             onLogout={handleLogout}
             yieldVal={yieldVal}
             roiVal={roiVal}

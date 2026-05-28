@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Lock, CloudRain, ArrowRight } from 'lucide-react';
+import { signInWithGoogle } from '../lib/firebase';
 
 interface LoginViewProps {
-  onLoginSuccess: (email: string) => void;
+  onLoginSuccess: (email: string, displayName?: string) => void;
 }
 
 export default function LoginView({ onLoginSuccess }: LoginViewProps) {
@@ -11,22 +12,19 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    
-    if (!email || !password) {
-      setErrorMsg('Please enter both email and password.');
-      return;
-    }
-    
     setIsLoading(true);
     
-    // Simulate authentication lag
-    setTimeout(() => {
+    try {
+      const result = await signInWithGoogle();
+      const user = result.user;
+      onLoginSuccess(user.email || 'user@example.com', user.displayName || undefined);
+    } catch (error: any) {
+      setErrorMsg(error.message || 'Gagal login dengan Google.');
       setIsLoading(false);
-      onLoginSuccess(email);
-    }, 1200);
+    }
   };
 
   return (
@@ -68,46 +66,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               </div>
             )}
             
-            <div className="space-y-1">
-              <label className="text-[10px] tracking-wider text-emerald-900 font-bold block uppercase" htmlFor="email">Email Address</label>
-              <input 
-                className="w-full py-2 bg-transparent text-emerald-950 font-serif text-lg outline-none border-b border-gray-300 focus:border-emerald-800 transition-colors"
-                id="email"
-                name="email"
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="grower@agrioptima.com" 
-                required
-                type="email"
-                value={email}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] tracking-wider text-emerald-900 font-bold block uppercase" htmlFor="password">Password</label>
-                <button 
-                  className="text-[10px] font-bold text-emerald-800 hover:text-emerald-950 uppercase" 
-                  onClick={(e) => { e.preventDefault(); alert("Use standard credentials to test, password: 'password123'"); }}
-                  type="button"
-                >
-                  FORGOT?
-                </button>
-              </div>
-              <input 
-                className="w-full py-2 bg-transparent text-emerald-950 font-serif text-lg outline-none border-b border-gray-300 focus:border-emerald-800 transition-colors"
-                id="password"
-                name="password"
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" 
-                required
-                type="password"
-                value={password}
-              />
-            </div>
-
             <div className="pt-2">
               <button 
-                className="w-full bg-emerald-950 text-white py-4 rounded-lg font-serif text-lg transition-transform duration-200 ease-out active:scale-98 hover:bg-emerald-900 shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-emerald-950 text-white py-4 rounded-lg font-serif text-lg transition-transform duration-200 ease-out active:scale-98 hover:bg-emerald-900 shadow-md flex items-center justify-center gap-3 cursor-pointer"
                 disabled={isLoading}
                 type="submit"
               >
@@ -115,8 +76,8 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   <span className="inline-block w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 ) : (
                   <>
-                    <span>Login to Dashboard</span>
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" className="w-6 h-6 bg-white rounded-full p-0.5" />
+                    <span>Sign In with Google</span>
                   </>
                 )}
               </button>

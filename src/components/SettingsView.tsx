@@ -12,13 +12,14 @@ import {
 } from 'lucide-react';
 
 interface SettingsViewProps {
-  userEmail: string;
+  userName: string;
   onLogout: () => void;
   yieldVal: number;
   roiVal: number;
 }
 
-export default function SettingsView({ userEmail, onLogout, yieldVal, roiVal }: SettingsViewProps) {
+export default function SettingsView({ userName, onLogout, yieldVal, roiVal }: SettingsViewProps) {
+  const [activeTab, setActiveTab] = useState('profile');
   return (
     <div className="min-h-screen bg-[#f2f4f1] pb-28">
       {/* Target topbar */}
@@ -48,11 +49,11 @@ export default function SettingsView({ userEmail, onLogout, yieldVal, roiVal }: 
         <section className="mb-6 bg-white border border-[#c1c8c1] rounded-xl p-6 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-emerald-100 text-[#002d1a] rounded-full flex items-center justify-center font-bold text-xl shadow-inner border border-emerald-200">
-              {userEmail ? userEmail[0].toUpperCase() : 'U'}
+              {userName ? userName[0].toUpperCase() : 'U'}
             </div>
             <div>
               <p className="text-[10px] tracking-wider uppercase text-gray-400 font-bold font-sans">ACTIVE GROWER SYSTEM</p>
-              <h3 className="font-serif text-lg font-bold text-[#002d1a]">{userEmail || 'grower@agrioptima.com'}</h3>
+              <h3 className="font-serif text-lg font-bold text-[#002d1a]">{userName || 'grower@agrioptima.com'}</h3>
               <p className="text-xs text-gray-500 mt-0.5">Authorization Tier: Precise Farm Administrator</p>
             </div>
           </div>
@@ -89,6 +90,10 @@ export default function SettingsView({ userEmail, onLogout, yieldVal, roiVal }: 
             <div className="p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer">
               <div className="flex items-center gap-3">
                 <Database className="w-5 h-5 text-emerald-800" />
+                <div className="ml-4">
+                  <h3 className="font-serif text-xl font-bold text-[#002d1a]">{userName}</h3>
+                  <p className="text-sm text-gray-500">Administrator</p>
+                </div>
                 <div>
                   <h4 className="font-sans font-bold text-sm text-[#002d1a]">Current Indicators Cache</h4>
                   <p className="text-[10px] text-gray-500">Yield: {yieldVal} t/ha, ROI: {roiVal}%</p>

@@ -42,6 +42,7 @@ interface OptimizationResult {
 interface DashboardViewProps {
   onLogout: () => void;
   onNavigateToTab: (tab: string) => void;
+  userName: string;
   yieldVal: number;
   setYieldVal: (val: number) => void;
   roiVal: number;
@@ -52,7 +53,7 @@ interface DashboardViewProps {
   setMarketIndex: (val: 'High' | 'Moderate' | 'Volatile') => void;
 }
 
-export default function DashboardView({ onLogout }: DashboardViewProps) {
+export default function DashboardView({ onLogout, userName, onNavigateToTab, yieldVal, setYieldVal, roiVal, setRoiVal, efficiencyVal, setEfficiencyVal, marketIndex, setMarketIndex }: DashboardViewProps) {
   const [variables, setVariables] = useState<Variable[]>([
     { id: 'v1', name: 'Jagung', profit: 5000000 },
     { id: 'v2', name: 'Kedelai', profit: 4000000 }
@@ -249,9 +250,12 @@ export default function DashboardView({ onLogout }: DashboardViewProps) {
             AGRI OPTIMA
           </h1>
         </div>
-        <button onClick={onLogout} className="text-white hover:text-emerald-200 transition-colors p-2" title="Sign out">
-          <LogOut className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-bold text-emerald-100 hidden md:inline-block">Hai, {userName}</span>
+          <button onClick={onLogout} className="text-white hover:text-emerald-200 transition-colors p-2" title="Sign out">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       <main className="pt-24 px-4 md:px-12 max-w-7xl mx-auto">
