@@ -438,9 +438,8 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
           )}
           {paymentSent && (
             <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-              Konfirmasi Pesanan (WhatsApp)
-            </button>
-          )}
+  Konfirmasi Pesanan (WhatsApp)
+</button>
           </>
         )}
         {viewMode === 'detail' && selectedItem && (
@@ -477,21 +476,21 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
             </div>
           </section>
         )}
-        
+        {showPaymentModal && selectedItem && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative border-2 border-emerald-800">
               <button onClick={resetModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-              <h3 className="font-serif text-2xl font-bold mb-3">{selectedItem.name}</h3>
+              <h3 className="font-serif text-2xl font-bold mb-3 text-emerald-900">Konfirmasi Pembayaran</h3>
               <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
               <div className="my-4 text-center">
-                <p className="font-bold mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+                <p className="font-bold text-xl mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
               </div>
               {!showQRCode && (
                 <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
               )}
               {showQRCode && (
                 <>
-                  <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded" />
+                  <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded border-2 border-emerald-100" />
                   <div className="mb-3">
                     <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-number">Nomor Pembayaran</label>
                     <input id="payment-number" type="text" className="w-full border-2 border-emerald-600 rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 1234567890" />
