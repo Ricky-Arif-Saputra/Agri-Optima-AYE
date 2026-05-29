@@ -414,53 +414,58 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
                 className="w-full border-2 border-emerald-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Jl. Kebun No.12, Bandung" />
             </div>
             <div className="my-5 text-center">
-              <p className="font-bold text-lg mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
-              <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                Bayar
-        {showPaymentModal && selectedItem && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative border-2 border-emerald-800">
-              <button onClick={resetModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-              <h3 className="font-serif text-2xl font-bold mb-3 text-emerald-900">Konfirmasi Pembayaran</h3>
-              <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
-              <div className="my-4 text-center">
-                <p className="font-bold text-xl mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
-              </div>
-              {!showQRCode && (
-                <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
-              )}
-              {showQRCode && (
-                <>
-                  <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded border-2 border-emerald-100" />
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-number">Nomor Pembayaran</label>
-                    <input id="payment-number" type="text" className="w-full border-2 border-emerald-600 rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 1234567890" />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
-                    <input id="payment-proof" type="file" accept="image/*"
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-emerald-600 file:text-white hover:file:bg-emerald-700" />
-                  </div>
-                  {paymentProofPreview && (
-                    <div className="mb-3 text-center">
-                      <p className="text-sm font-medium text-emerald-700 mb-1">Pratinjau Bukti</p>
-                      <img src={paymentProofPreview} alt="Preview" className="mx-auto w-32 h-32 object-cover rounded" />
-                    </div>
-                  )}
-                  {!paymentSent && (
-                    <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
-                      Kirim Pembayaran
-                    </button>
-                  )}
-                  {paymentSent && (
-                    <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                      Konfirmasi Pesanan (WhatsApp)
-                    </button>
-                  )}
-    
-              )}
-            </div>
+                <p className="font-bold text-lg mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+                <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+                  Bayar
+                </button>
+                {showPaymentModal && selectedItem && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative border-2 border-emerald-800">
+      <button onClick={resetModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+      <h3 className="font-serif text-2xl font-bold mb-3 text-emerald-900">Konfirmasi Pembayaran</h3>
+      <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
+      <div className="my-4 text-center">
+        <p className="font-bold text-xl mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+      </div>
+      {!showQRCode && (
+        <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+          Bayar
+        </button>
+      )}
+      {showQRCode && (
+        <div className="space-y-4">
+          <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded border-2 border-emerald-100" />
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-number">Nomor Pembayaran</label>
+            <input id="payment-number" type="text" className="w-full border-2 border-emerald-600 rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 1234567890" />
           </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
+            <input id="payment-proof" type="file" accept="image/*" className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-emerald-600 file:text-white hover:file:bg-emerald-700" />
+          </div>
+          {paymentProofPreview && (
+            <div className="mb-3 text-center">
+              <p className="text-sm font-medium text-emerald-700 mb-1">Pratinjau Bukti</p>
+              <img src={paymentProofPreview} alt="Preview" className="mx-auto w-32 h-32 object-cover rounded" />
+            </div>
+          )}
+          {!paymentSent && (
+            <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
+              Kirim Pembayaran
+            </button>
+          )}
+          {paymentSent && (
+            <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+              Konfirmasi Pesanan (WhatsApp)
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+)}
+            </div>
+          </section>
         )}
 
         {/* Order Detail Modal */}
