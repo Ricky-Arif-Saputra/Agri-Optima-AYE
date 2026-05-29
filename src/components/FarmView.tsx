@@ -43,6 +43,54 @@ interface FarmViewProps {
   efficiencyVal: number;
   setEfficiencyVal: (val: number) => void;
 }
+// src/components/FarmView.tsx
+import React, { useState, useEffect } from 'react';
+import {
+  Droplet,
+  Thermometer,
+  Leaf,
+  Sun,
+  Plus,
+  CheckCircle2,
+  Sprout,
+  Beaker,
+  ChevronLeft,
+  ChevronRight,
+  CloudLightning,
+  Home,
+  LayoutDashboard,
+  Store,
+  Settings as SettingsIcon,
+} from 'lucide-react';
+import { Plot, Task } from '../types';
+
+// Define the shape of an item displayed in the farm sections
+interface FarmItem {
+  id: string;
+  name: string;
+  price: number; // IDR
+  image: string;
+  description: string;
+}
+
+interface Order {
+  id: string;
+  item: string;
+  quantity: number;
+  isGroup: boolean;
+  address: string;
+  total: number;
+  timestamp: string;
+  paymentNumber?: string; // filled after user sends payment
+  paymentProof?: string; // data‑url of uploaded proof image
+}
+
+interface FarmViewProps {
+  onNavigateToTab: (tab: string) => void;
+  userName: string;
+  efficiencyVal: number;
+  setEfficiencyVal: (val: number) => void;
+}
 
 // Placeholder QRIS image – replace with real QR code later
 const QRIS_PLACEHOLDER = 'https://via.placeholder.com/250?text=QRIS+Payment';
@@ -51,6 +99,8 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
   // ----- UI State -----
   const [section, setSection] = useState<'bahan' | 'manajemen' | 'alat'>('bahan');
   const [selectedItem, setSelectedItem] = useState<FarmItem | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+  const [activeTab, setActiveTab] = useState<string>('farm');
   const [quantity, setQuantity] = useState<number>(1);
   const [isGroup, setIsGroup] = useState<boolean>(false);
   const [address, setAddress] = useState<string>('');
@@ -140,6 +190,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     setShowQRCode(false);
     setPaymentSent(false);
     setCurrentOrderId('');
+    setViewMode('list');
   };
 
   const calculateTotal = () => {
@@ -165,6 +216,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     setOrderHistory(newHistory);
     localStorage.setItem('farmOrders', JSON.stringify(newHistory));
     setCurrentOrderId(order.id);
+    setShowPaymentModal(true);
     setShowQRCode(true);
   };
 
@@ -205,8 +257,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
 
   const handleItemClick = (item: FarmItem) => {
     setSelectedItem(item);
-    setShowPaymentModal(true);
-    // Reset flow flags for a fresh order
+    setViewMode('detail');
     setShowQRCode(false);
     setPaymentSent(false);
     setCurrentOrderId('');
@@ -265,57 +316,61 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
       </header>
 
       <main className="pt-20 px-4 md:px-12 max-w-7xl mx-auto">
-        {/* Section Tabs */}
-        <nav className="flex gap-4 mb-6">
-          {['bahan', 'manajemen', 'alat'].map((key) => (
-            <button
-              key={key}
-              onClick={() => setSection(key as any)}
-              className={`px-4 py-2 rounded-xl font-bold text-sm ${section === key ? 'bg-[#cdead0] text-[#1a432f]' : 'bg-gray-100 text-gray-600'}`}
-            >
-              {key === 'bahan' && 'Pembelian Bahan Tani'}
-              {key === 'manajemen' && 'Manajemen Tani'}
-              {key === 'alat' && 'Penyewaan Alat'}
-            </button>
-          ))}
-        </nav>
-
-        {/* Content Switch */}
-        {section === 'bahan' && renderItems(bahanItems)}
-        {section === 'manajemen' && renderItems(manajemenItems)}
-        {section === 'alat' && renderItems(alatItems)}
-
-        {/* Order History List */}
-        {orderHistory.length > 0 && (
-          <section className="mt-8">
-            <h2 className="font-serif text-xl font-bold text-[#002d1a] mb-4">Riwayat Pesanan</h2>
-            <ul className="space-y-2">
-              {orderHistory.map((o) => (
-                <li
-                  key={o.id}
-                  className="bg-white border border-[#c1c8c1] rounded p-3 shadow-sm flex justify-between items-center cursor-pointer hover:bg-emerald-50"
-                  onClick={() => setSelectedOrder(o)}
+        {viewMode === 'list' && (
+          <>
+            {/* Section Tabs */}
+            <nav className="flex gap-4 mb-6">
+              {['bahan', 'manajemen', 'alat'].map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setSection(key as any)}
+                  className={`px-4 py-2 rounded-xl font-bold text-sm ${section === key ? 'bg-[#cdead0] text-[#1a432f]' : 'bg-gray-100 text-gray-600'}`}
                 >
-                  <div>
-                    <p className="font-bold text-[#002d1a]">{o.item}</p>
-                    <p className="text-xs text-gray-500">Qty: {o.quantity}{o.isGroup ? ' (group)' : ''}</p>
-                    <p className="text-xs text-gray-500">Tanggal: {new Date(o.timestamp).toLocaleDateString()}</p>
-                  </div>
-                  <span className="font-bold text-emerald-800">Rp{o.total.toLocaleString()}</span>
-                </li>
+                  {key === 'bahan' && 'Pembelian Bahan Tani'}
+                  {key === 'manajemen' && 'Manajemen Tani'}
+                  {key === 'alat' && 'Penyewaan Alat'}
+                </button>
               ))}
-            </ul>
-          </section>
-        )}
-      </main>
+            </nav>
 
-      {/* Payment Modal */}
-      {showPaymentModal && selectedItem && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
-            <button onClick={resetModal} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">✕</button>
-            <h3 className="font-serif text-lg font-bold mb-2">{selectedItem.name}</h3>
-            <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
+            {/* Content Switch */}
+            {section === 'bahan' && renderItems(bahanItems)}
+            {section === 'manajemen' && renderItems(manajemenItems)}
+            {section === 'alat' && renderItems(alatItems)}
+
+            {/* Order History List */}
+            {orderHistory.length > 0 && (
+              <section className="mt-8">
+                <h2 className="font-serif text-xl font-bold text-[#002d1a] mb-4">Riwayat Pesanan</h2>
+                <ul className="space-y-2">
+                  {orderHistory.map((o) => (
+                    <li
+                      key={o.id}
+                      className="bg-white border border-[#c1c8c1] rounded p-3 shadow-sm flex justify-between items-center cursor-pointer hover:bg-emerald-50"
+                      onClick={() => setSelectedOrder(o)}
+                    >
+                      <div>
+                        <p className="font-bold text-[#002d1a]">{o.item}</p>
+                        <p className="text-xs text-gray-500">Qty: {o.quantity}{o.isGroup ? ' (group)' : ''}</p>
+                        <p className="text-xs text-gray-500">Tanggal: {new Date(o.timestamp).toLocaleDateString()}</p>
+                      </div>
+                      <span className="font-bold text-emerald-800">Rp{o.total.toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
+
+        {/* Detail View */}
+        {viewMode === 'detail' && selectedItem && (
+          <section className="bg-white rounded-xl p-6 shadow-lg max-w-2xl mx-auto">
+            <button onClick={() => setViewMode('list')} className="text-gray-400 hover:text-gray-600 mb-4">← Kembali</button>
+            <h2 className="font-serif text-2xl font-bold text-[#002d1a] mb-2">{selectedItem.name}</h2>
+            <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-64 object-cover rounded mb-4" />
+            <p className="text-gray-700 mb-2">{selectedItem.description}</p>
+            <p className="font-bold text-emerald-800 text-lg mb-4">Rp{selectedItem.price.toLocaleString()}</p>
             <div className="flex items-center gap-2 mb-3">
               <label className="text-sm font-medium">Kuantitas</label>
               <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} className="w-16 border rounded p-1" />
@@ -331,41 +386,81 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
             <div className="my-4 text-center">
               <p className="font-bold mb-2">Total: Rp{calculateTotal().toLocaleString()}</p>
             </div>
-            {/* Flow Buttons */}
-            {!showQRCode && (
-              <button onClick={handlePayClick} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                Bayar
-              </button>
-            )}
-            {showQRCode && (
-              <>
-                <img src={QRIS_PLACEHOLDER} alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4" />
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1" htmlFor="payment-number">Nomor Pembayaran</label>
-                  <input id="payment-number" type="text" className="w-full border rounded p-1" placeholder="Contoh: 1234567890" />
-                </div>
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
-                  <input id="payment-proof" type="file" accept="image/*" className="w-full" />
-                </div>
-                {!paymentSent && (
-                  <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
-                    Kirim Pembayaran
-                  </button>
-                )}
-                {paymentSent && (
-                  <button onClick={handleConfirm} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                    Konfirmasi Pesanan (WhatsApp)
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
+            <button onClick={handlePayClick} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
+          </section>
+        )}
 
-      {/* Order Detail Modal */}
-      {selectedOrder && <OrderDetailModal order={selectedOrder} />}
+        {/* Payment Modal */}
+        {showPaymentModal && selectedItem && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+              <button onClick={resetModal} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">✕</button>
+              <h3 className="font-serif text-lg font-bold mb-2">{selectedItem.name}</h3>
+              <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
+              
+              <div className="my-4 text-center">
+                <p className="font-bold mb-2">Total: Rp{calculateTotal().toLocaleString()}</p>
+              </div>
+
+              {!showQRCode && (
+                <button onClick={handlePayClick} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+                  Bayar
+                </button>
+              )}
+              {showQRCode && (
+                <>
+                  <img src={QRIS_PLACEHOLDER} alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4" />
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1" htmlFor="payment-number">Nomor Pembayaran</label>
+                    <input id="payment-number" type="text" className="w-full border rounded p-1" placeholder="Contoh: 1234567890" />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
+                    <input id="payment-proof" type="file" accept="image/*" className="w-full" />
+                  </div>
+                  {!paymentSent && (
+                    <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
+                      Kirim Pembayaran
+                    </button>
+                  )}
+                  {paymentSent && (
+                    <button onClick={handleConfirm} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+                      Konfirmasi Pesanan (WhatsApp)
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Order Detail Modal */}
+        {selectedOrder && <OrderDetailModal order={selectedOrder} />}
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-300 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex justify-around items-center py-2.5 px-4 pb-safe">
+        <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'home' ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'}`}>
+          <Home className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Home</span>
+        </button>
+        <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'dashboard' ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'}`}>
+          <LayoutDashboard className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Optimasi</span>
+        </button>
+        <button onClick={() => setActiveTab('farm')} className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'farm' ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'}`}>
+          <Sprout className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Farm</span>
+        </button>
+        <button onClick={() => setActiveTab('market')} className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'market' ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'}`}>
+          <Store className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Market</span>
+        </button>
+        <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'settings' ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'}`}>
+          <SettingsIcon className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px] tracking-tight">Settings</span>
+        </button>
+      </nav>
     </div>
   );
 }
