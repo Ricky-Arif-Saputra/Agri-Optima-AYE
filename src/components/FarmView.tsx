@@ -303,9 +303,9 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
           <div className="mt-3">
             <p className="text-sm text-gray-600 mb-1"><strong>Bukti Pembayaran:</strong></p>
             <img src={order.paymentProof} alt="Bukti" className="w-full h-auto rounded" />
+            <p className="text-xs text-gray-500 mt-4">{new Date(order.timestamp).toLocaleString()}</p>
           </div>
         )}
-        <p className="text-xs text-gray-500 mt-4">{new Date(order.timestamp).toLocaleString()}</p>
       </div>
     </div>
   );
@@ -367,16 +367,160 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
                 </ul>
               </section>
             )}
-          </>
+{viewMode === 'detail' && selectedItem && (
+  <section className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+    <button onClick={() => setViewMode('list')} className="text-gray-600 hover:text-emerald-800 mb-4 flex items-center gap-1">
+      <ChevronLeft className="w-4 h-4" /> Kembali
+    </button>
+    <h2 className="font-serif text-3xl font-bold text-emerald-900 mb-3">{selectedItem.name}</h2>
+    <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-72 object-cover rounded mb-5" />
+    <p className="text-gray-800 mb-3">{selectedItem.description}</p>
+    <p className="font-bold text-emerald-800 text-xl mb-4">Rp {selectedItem.price.toLocaleString()}</p>
+    <div className="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label className="block text-sm font-medium text-emerald-700 mb-1">Kuantitas</label>
+        <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))}
+          className="w-full border-2 border-emerald-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+      </div>
+      <div className="flex items-center">
+        <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)}
+          className="form-checkbox h-5 w-5 text-emerald-600" />
+        <label className="ml-2 text-sm font-medium text-emerald-700">Pembelian Grup (diskon 10% untuk ≥5)</label>
+      </div>
+    </div>
+    <div>
+      <label className="block text-sm font-medium text-emerald-700 mb-1">Alamat Pengiriman</label>
+      <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2}
+        className="w-full border-2 border-emerald-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Jl. Kebun No.12, Bandung" />
+    </div>
+    <div className="my-5 text-center">
+      <p className="font-bold text-lg mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+      <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+        Bayar
+      </button>
+    </div>
+  </section>
+)}
+{showPaymentModal && selectedItem && (
+  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+      <button onClick={resetModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+      <h3 className="font-serif text-2xl font-bold mb-3">{selectedItem.name}</h3>
+      <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
+      <div className="my-4 text-center">
+        <p className="font-bold mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+      </div>
+      {!showQRCode && (
+        <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
+      )}
+      {showQRCode && (
+        <>
+          <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded" />
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-number">Nomor Pembayaran</label>
+            <input id="payment-number" type="text" className="w-full border-2 border-emerald-600 rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 1234567890" />
+          </div>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
+            <input id="payment-proof" type="file" accept="image/*"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-emerald-600 file:text-white hover:file:bg-emerald-700" />
+          </div>
+          {paymentProofPreview && (
+            <div className="mb-3 text-center">
+              <p className="text-sm font-medium text-emerald-700 mb-1">Pratinjau Bukti</p>
+              <img src={paymentProofPreview} alt="Preview" className="mx-auto w-32 h-32 object-cover rounded" />
+            </div>
+          )}
+          {!paymentSent && (
+            <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
+              Kirim Pembayaran
+            </button>
+          )}
+          {paymentSent && (
             <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
               Konfirmasi Pesanan (WhatsApp)
             </button>
           )}
-        </>
-      )}
-    </div>
-  </div>
-)}   </div>
+          </>
+        )}
+        {viewMode === 'detail' && selectedItem && (
+          <section className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+            <button onClick={() => setViewMode('list')} className="text-gray-600 hover:text-emerald-800 mb-4 flex items-center gap-1">
+              <ChevronLeft className="w-4 h-4" /> Kembali
+            </button>
+            <h2 className="font-serif text-3xl font-bold text-emerald-900 mb-3">{selectedItem.name}</h2>
+            <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-72 object-cover rounded mb-5" />
+            <p className="text-gray-800 mb-3">{selectedItem.description}</p>
+            <p className="font-bold text-emerald-800 text-xl mb-4">Rp {selectedItem.price.toLocaleString()}</p>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-emerald-700 mb-1">Kuantitas</label>
+                <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))}
+                  className="w-full border-2 border-emerald-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+              </div>
+              <div className="flex items-center">
+                <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)}
+                  className="form-checkbox h-5 w-5 text-emerald-600" />
+                <label className="ml-2 text-sm font-medium text-emerald-700">Pembelian Grup (diskon 10% untuk ≥5)</label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-emerald-700 mb-1">Alamat Pengiriman</label>
+              <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2}
+                className="w-full border-2 border-emerald-600 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: Jl. Kebun No.12, Bandung" />
+            </div>
+            <div className="my-5 text-center">
+              <p className="font-bold text-lg mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+              <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+                Bayar
+              </button>
+            </div>
+          </section>
+        )}
+        
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
+              <button onClick={resetModal} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
+              <h3 className="font-serif text-2xl font-bold mb-3">{selectedItem.name}</h3>
+              <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
+              <div className="my-4 text-center">
+                <p className="font-bold mb-2">Total: Rp {calculateTotal().toLocaleString()}</p>
+              </div>
+              {!showQRCode && (
+                <button onClick={handlePayClick} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
+              )}
+              {showQRCode && (
+                <>
+                  <img src="/QRIS.jpeg" alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4 rounded" />
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-number">Nomor Pembayaran</label>
+                    <input id="payment-number" type="text" className="w-full border-2 border-emerald-600 rounded p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Contoh: 1234567890" />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1 text-emerald-700" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
+                    <input id="payment-proof" type="file" accept="image/*"
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-emerald-600 file:text-white hover:file:bg-emerald-700" />
+                  </div>
+                  {paymentProofPreview && (
+                    <div className="mb-3 text-center">
+                      <p className="text-sm font-medium text-emerald-700 mb-1">Pratinjau Bukti</p>
+                      <img src={paymentProofPreview} alt="Preview" className="mx-auto w-32 h-32 object-cover rounded" />
+                    </div>
+                  )}
+                  {!paymentSent && (
+                    <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
+                      Kirim Pembayaran
+                    </button>
+                  )}
+                  {paymentSent && (
+                    <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+                      Konfirmasi Pesanan (WhatsApp)
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Order Detail Modal */}
