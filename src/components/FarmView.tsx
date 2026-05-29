@@ -109,6 +109,8 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
   const [showQRCode, setShowQRCode] = useState<boolean>(false);
   const [paymentSent, setPaymentSent] = useState<boolean>(false);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
 
   // Order handling
   const [orderHistory, setOrderHistory] = useState<Order[]>([]);
@@ -189,6 +191,8 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     setShowPaymentModal(false);
     setShowQRCode(false);
     setPaymentSent(false);
+    setPaymentProofPreview('');
+    setPaymentProofFile(null);
     setCurrentOrderId('');
     setViewMode('list');
   };
@@ -233,6 +237,9 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     const reader = new FileReader();
     reader.onload = () => {
       const proofDataUrl = reader.result as string;
+      // Set preview and store file for future use
+      setPaymentProofPreview(proofDataUrl);
+      setPaymentProofFile(file);
       const updated = orderHistory.map((o) =>
         o.id === currentOrderId ? { ...o, paymentNumber, paymentProof: proofDataUrl } : o,
       );
@@ -361,77 +368,15 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
               </section>
             )}
           </>
-        )}
-
-        {/* Detail View */}
-        {viewMode === 'detail' && selectedItem && (
-          <section className="bg-white rounded-xl p-6 shadow-lg max-w-2xl mx-auto">
-            <button onClick={() => setViewMode('list')} className="text-gray-400 hover:text-gray-600 mb-4">← Kembali</button>
-            <h2 className="font-serif text-2xl font-bold text-[#002d1a] mb-2">{selectedItem.name}</h2>
-            <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-64 object-cover rounded mb-4" />
-            <p className="text-gray-700 mb-2">{selectedItem.description}</p>
-            <p className="font-bold text-emerald-800 text-lg mb-4">Rp{selectedItem.price.toLocaleString()}</p>
-            <div className="flex items-center gap-2 mb-3">
-              <label className="text-sm font-medium">Kuantitas</label>
-              <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} className="w-16 border rounded p-1" />
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <label className="text-sm font-medium">Pembelian Grup (diskon 10% untuk ≥5)</label>
-              <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} className="form-checkbox" />
-            </div>
-            <div className="mb-3">
-              <label className="block text-sm font-medium mb-1">Alamat Pengiriman</label>
-              <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={2} className="w-full border rounded p-1 text-sm" placeholder="Contoh: Jl. Kebun No.12, Bandung" />
-            </div>
-            <div className="my-4 text-center">
-              <p className="font-bold mb-2">Total: Rp{calculateTotal().toLocaleString()}</p>
-            </div>
-            <button onClick={handlePayClick} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">Bayar</button>
-          </section>
-        )}
-
-        {/* Payment Modal */}
-        {showPaymentModal && selectedItem && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl relative">
-              <button onClick={resetModal} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600">✕</button>
-              <h3 className="font-serif text-lg font-bold mb-2">{selectedItem.name}</h3>
-              <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
-              
-              <div className="my-4 text-center">
-                <p className="font-bold mb-2">Total: Rp{calculateTotal().toLocaleString()}</p>
-              </div>
-
-              {!showQRCode && (
-                <button onClick={handlePayClick} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                  Bayar
-                </button>
-              )}
-              {showQRCode && (
-                <>
-                  <img src={QRIS_PLACEHOLDER} alt="QRIS" className="mx-auto w-48 h-48 object-cover mb-4" />
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1" htmlFor="payment-number">Nomor Pembayaran</label>
-                    <input id="payment-number" type="text" className="w-full border rounded p-1" placeholder="Contoh: 1234567890" />
-                  </div>
-                  <div className="mb-3">
-                    <label className="block text-sm font-medium mb-1" htmlFor="payment-proof">Bukti Pembayaran (foto)</label>
-                    <input id="payment-proof" type="file" accept="image/*" className="w-full" />
-                  </div>
-                  {!paymentSent && (
-                    <button onClick={handleSendPayment} className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2 rounded font-semibold mb-2">
-                      Kirim Pembayaran
-                    </button>
-                  )}
-                  {paymentSent && (
-                    <button onClick={handleConfirm} className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white py-2 rounded font-semibold">
-                      Konfirmasi Pesanan (WhatsApp)
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+            <button onClick={handleConfirm} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-2 rounded font-semibold">
+              Konfirmasi Pesanan (WhatsApp)
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  </div>
+)}   </div>
         )}
 
         {/* Order Detail Modal */}
