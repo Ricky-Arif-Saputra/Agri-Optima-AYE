@@ -67,20 +67,27 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
 
   // ----- Sample Data -----
   const bahanItems: FarmItem[] = [
-    {
-      id: 'b1',
-      name: 'Urea 50kg',
-      price: 150000,
-      image: 'https://via.placeholder.com/100?text=Urea',
-      description: 'High‑nitrogen fertilizer for staple crops. Cocok untuk meningkatkan hasil padi, jagung, dan kedelai secara signifikan.',
-    },
-    {
-      id: 'b2',
-      name: 'Kompos Organik 30kg',
-      price: 80000,
-      image: 'https://via.placeholder.com/100?text=Kompos',
-      description: 'Organic compost to improve soil structure, water retention, and microbial activity.',
-    },
+  {
+    id: 'b1',
+    name: 'Urea 50kg',
+    price: 150000,
+    image: 'https://via.placeholder.com/100?text=Urea',
+    description: 'High‑nitrogen fertilizer for staple crops. Cocok untuk meningkatkan hasil padi, jagung, dan kedelai secara signifikan.',
+  },
+  {
+    id: 'b2',
+    name: 'Kompos Organik 30kg',
+    price: 80000,
+    image: 'https://via.placeholder.com/100?text=Kompos',
+    description: 'Organic compost to improve soil structure, water retention, and microbial activity.',
+  },
+  {
+    id: 'b3',
+    name: 'Pupuk NPK 16',
+    price: 80000,
+    image: '/NPK.webp',
+    description: 'Pupuk NPK 16 untuk pertumbuhan optimal tanaman.',
+  },
   ];
 
   const manajemenItems: FarmItem[] = [
