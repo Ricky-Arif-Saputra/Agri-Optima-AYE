@@ -52,13 +52,14 @@ const defaultProducts: Product[] = [
   }
 ];
 
-export default function MarketView({ onNavigateToTab, cart, setCart }: MarketViewProps) {
+export default function MarketView({ onNavigateToTab, userName, cart, setCart }: MarketViewProps) {
   const [filterChip, setFilterChip] = useState<'all' | 'processed' | 'raw' | 'direct' | 'organic'>('all');
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const [showBundleModal, setShowBundleModal] = useState(false);
 
-  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  console.log('Market products count:', products.length);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     title: '',
@@ -270,7 +271,7 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
           </div>
         </section>
 
-        {/* Dynamic products list */}
+        <h2 className="text-center text-2xl font-bold text-[#002d1a] py-8">Market Demo – Check Rendering</h2>
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {filteredProducts.length > 0 ? (
             filteredProducts.map(product => (
