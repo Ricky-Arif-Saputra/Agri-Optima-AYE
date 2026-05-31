@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   ShoppingCart, 
@@ -9,7 +9,8 @@ import {
   ArrowRight, 
   Package, 
   Compass, 
-  X
+  X,
+  Sprout
 } from 'lucide-react';
 import { Product, CartItem } from '../types';
 
@@ -27,7 +28,7 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
   const [showBundleModal, setShowBundleModal] = useState(false);
 
   // Core product listings
-  const products: Product[] = [
+  const defaultProducts: Product[] = [
     {
       id: 'p-1',
       title: 'Highland Arabica',
@@ -56,6 +57,71 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
       tag: 'Raw Material'
     }
   ];
+
+  const [products, setProducts] = useState<Product[]>(defaultProducts);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    title: '',
+    price: '',
+    totalHarvest: '',
+    description: '',
+    address: '',
+    image: ''
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('marketProducts');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setProducts([...parsed, ...defaultProducts]);
+      } catch (e) {
+        setProducts(defaultProducts);
+      }
+    }
+  }, []);
+
+  const handleAddProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProduct.title || !newProduct.price || !newProduct.image) {
+      alert('Mohon isi nama, harga, dan unggah gambar.');
+      return;
+    }
+    const product: Product = {
+      id: `p-${Date.now()}`,
+      title: newProduct.title,
+      price: parseFloat(newProduct.price),
+      description: newProduct.description,
+      category: 'direct',
+      tag: 'Hasil Tani',
+      image: newProduct.image,
+      sellerName: userName,
+      totalHarvest: newProduct.totalHarvest,
+      address: newProduct.address
+    };
+    const updated = [product, ...products];
+    setProducts(updated);
+    localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+    setShowAddModal(false);
+    setNewProduct({ title: '', price: '', totalHarvest: '', description: '', address: '', image: '' });
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    const updated = products.filter(p => p.id !== id);
+    setProducts(updated);
+    localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setNewProduct(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Adding item to dynamic cart state
   const handleAddToCart = (product: Product) => {
@@ -144,15 +210,23 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
           </div>
 
           {/* Search bar inside view */}
-          <div className="relative max-w-md mb-6 shadow-sm rounded-lg bg-white overflow-hidden border border-gray-300">
-            <input 
-              type="text"
-              placeholder="Search arabica, saffron, oils..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2.5 pl-10 pr-4 outline-none text-emerald-950 text-xs font-bold placeholder:text-gray-400"
-            />
-            <Search className="w-4 h-4 text-emerald-800 absolute left-3 top-3.5" />
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1 max-w-md shadow-sm rounded-lg bg-white overflow-hidden border border-gray-300">
+              <input 
+                type="text"
+                placeholder="Search arabica, saffron, oils..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full py-2.5 pl-10 pr-4 outline-none text-emerald-950 text-xs font-bold placeholder:text-gray-400"
+              />
+              <Search className="w-4 h-4 text-emerald-800 absolute left-3 top-3.5" />
+            </div>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-[#002d1a] hover:bg-emerald-900 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap font-sans"
+            >
+              <Plus className="w-4 h-4" /> Tambahkan Hasil Tani
+            </button>
           </div>
 
           {/* Category selection chips */}
@@ -193,9 +267,18 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
                     className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" 
                     src={product.image}
                   />
-                  <div className="absolute top-3 right-3 bg-[#cdead0] text-[#516a56] px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest block font-sans">
+                  <div className="absolute top-3 right-3 bg-[#cdead0] text-[#516a56] px-3 py-1 rounded-full text-[9px] font-extrabold uppercase tracking-widest block font-sans shadow-sm">
                     {product.tag}
                   </div>
+                  {product.sellerName === userName && (
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id); }}
+                      className="absolute top-3 left-3 bg-white/90 text-red-600 hover:text-white hover:bg-red-600 p-1.5 rounded-full shadow transition-colors"
+                      title="Hapus Produk Anda"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Body Content */}
@@ -424,6 +507,78 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
                 Dismiss
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Product Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setShowAddModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif text-2xl font-bold text-[#002d1a] mb-6 flex items-center gap-2">
+              <Sprout className="w-6 h-6 text-emerald-600" />
+              Tambahkan Hasil Tani
+            </h3>
+            
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-emerald-900 mb-1">Foto Produk</label>
+                <div className="flex flex-col items-center justify-center w-full">
+                  {newProduct.image ? (
+                    <div className="relative w-full h-40 mb-2">
+                      <img src={newProduct.image} alt="Preview" className="w-full h-full object-cover rounded-xl border border-gray-200" />
+                      <button type="button" onClick={() => setNewProduct({...newProduct, image: ''})} className="absolute top-2 right-2 bg-white text-red-500 p-1 rounded-full shadow">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-emerald-200 border-dashed rounded-xl cursor-pointer bg-emerald-50 hover:bg-emerald-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Plus className="w-8 h-8 text-emerald-500 mb-2" />
+                        <p className="text-sm text-emerald-700 font-semibold">Pilih atau unggah foto</p>
+                      </div>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-900 mb-1">Nama Produk</label>
+                  <input required type="text" value={newProduct.title} onChange={e => setNewProduct({...newProduct, title: e.target.value})} className="w-full border border-emerald-200 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 bg-gray-50 outline-none" placeholder="Misal: Padi Ciherang" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-900 mb-1">Harga (Rp)</label>
+                  <input required type="number" min={0} value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="w-full border border-emerald-200 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 bg-gray-50 outline-none" placeholder="Misal: 50000" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-emerald-900 mb-1">Jumlah Total Panen</label>
+                <input type="text" value={newProduct.totalHarvest} onChange={e => setNewProduct({...newProduct, totalHarvest: e.target.value})} className="w-full border border-emerald-200 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 bg-gray-50 outline-none" placeholder="Misal: 500 Kg / 2 Ton" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-emerald-900 mb-1">Deskripsi Produk</label>
+                <textarea required rows={3} value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} className="w-full border border-emerald-200 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 bg-gray-50 outline-none resize-none" placeholder="Deskripsikan kualitas, varietas, dll." />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-emerald-900 mb-1">Alamat Penjual</label>
+                <textarea rows={2} value={newProduct.address} onChange={e => setNewProduct({...newProduct, address: e.target.value})} className="w-full border border-emerald-200 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 bg-gray-50 outline-none resize-none" placeholder="Lokasi panen atau titik jemput" />
+              </div>
+
+              <button type="submit" className="w-full bg-[#002d1a] hover:bg-emerald-900 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all mt-4">
+                Posting Hasil Tani
+              </button>
+            </form>
           </div>
         </div>
       )}

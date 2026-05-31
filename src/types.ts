@@ -14,6 +14,9 @@ export interface Product {
   category: 'all' | 'processed' | 'raw' | 'direct' | 'organic';
   image: string;
   tag: string;
+  sellerName?: string;
+  totalHarvest?: string;
+  address?: string;
 }
 
 export interface Plot {
