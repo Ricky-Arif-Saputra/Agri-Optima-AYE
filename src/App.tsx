@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './lib/firebase';
-import { 
-  LayoutDashboard, 
-  Sprout, 
-  Store, 
+import {
+  LayoutDashboard,
+  Sprout,
+  Store,
   Settings as SettingsIcon,
   HelpCircle,
   Home
@@ -67,14 +67,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f2f4f1] text-[#191c1b] relative">
-      
+
       {/* Dynamic Tab Renderer */}
       <div className="fade-in-container pb-8">
         {activeTab === 'home' && (
           <HomeView onNavigateToTab={handleNavigateToTab} userName={userName} />
         )}
         {activeTab === 'dashboard' && (
-          <DashboardView 
+          <DashboardView
             onLogout={handleLogout}
             onNavigateToTab={handleNavigateToTab}
             userName={userName}
@@ -89,7 +89,7 @@ export default function App() {
           />
         )}
         {activeTab === 'farm' && (
-          <FarmView 
+          <FarmView
             onNavigateToTab={handleNavigateToTab}
             userName={userName}
             efficiencyVal={efficiencyVal}
@@ -97,7 +97,7 @@ export default function App() {
           />
         )}
         {activeTab === 'market' && (
-          <MarketView 
+          <MarketView
             onNavigateToTab={handleNavigateToTab}
             userName={userName}
             cart={cart}
@@ -105,7 +105,7 @@ export default function App() {
           />
         )}
         {activeTab === 'settings' && (
-          <SettingsView 
+          <SettingsView
             userName={userName}
             onLogout={handleLogout}
             yieldVal={yieldVal}
@@ -119,66 +119,61 @@ export default function App() {
 
       {/* Bottom Navigation Web Bar - custom grounded styling */}
       <nav className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-300 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex justify-around items-center py-2.5 px-4 pb-safe">
-        
+
         {/* Dashboard button */}
         {/* Home button */}
         <button
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
-            activeTab === 'home'
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'home'
               ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
               : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
-          }`}
+            }`}
         >
           <Home className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">Home</span>
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('dashboard')}
-          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
-            activeTab === 'dashboard' 
-              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' 
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'dashboard'
+              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
               : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
-          }`}
+            }`}
         >
           <LayoutDashboard className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">Optimasi Laba</span>
         </button>
 
         {/* Farm button */}
-        <button 
+        <button
           onClick={() => setActiveTab('farm')}
-          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
-            activeTab === 'farm' 
-              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' 
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'farm'
+              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
               : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
-          }`}
+            }`}
         >
           <Sprout className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">Farm</span>
         </button>
 
         {/* Market button */}
-        <button 
+        <button
           onClick={() => setActiveTab('market')}
-          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
-            activeTab === 'market' 
-              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' 
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'market'
+              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
               : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
-          }`}
+            }`}
         >
           <Store className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">Market</span>
         </button>
 
         {/* Settings button */}
-        <button 
+        <button
           onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${
-            activeTab === 'settings' 
-              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold' 
+          className={`flex flex-col items-center justify-center py-1.5 px-4 text-xs font-sans font-bold uppercase transition-all duration-300 scale-100 cursor-pointer ${activeTab === 'settings'
+              ? 'bg-[#cdead0] text-[#1a432f] rounded-full px-5 py-2 font-bold'
               : 'text-gray-500 hover:text-emerald-950 hover:bg-gray-100/30 rounded-xl px-4 py-2'
-          }`}
+            }`}
         >
           <SettingsIcon className="w-5 h-5 mb-0.5" />
           <span className="text-[10px] tracking-tight">Settings</span>
