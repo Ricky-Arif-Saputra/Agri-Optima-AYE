@@ -21,42 +21,42 @@ interface MarketViewProps {
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }
 
+// Core product listings
+const defaultProducts: Product[] = [
+  {
+    id: 'p-1',
+    title: 'Highland Arabica',
+    description: 'Cold-pressed and sun-dried beans harvested from high-altitude precision specialty farms.',
+    price: 24.50,
+    category: 'processed',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8bzYvPFHxTePmKS8k-M2DhmWFFcDEBktnn9RpnwdVE8W_E2WiFxgU8vv7Yhvz346HXWbYYwEBxoRsON8qDUule-1dk-AHZUmHBUVAXus_oC5E3UCS_kLLt9bK_cL0XLGYbzOqAgTCImMMh7uNUJZeau-LnibmJSRdrtkVSUT6FJpy0IeO_cVmKDTAizPDAan9WhsPyVsaxsKYkdOGtne4CYBvGjilCOW020oO11D1cKTaKHHQECcxeNQYXkPIRmOFtL_31fQsYA',
+    tag: 'Processed'
+  },
+  {
+    id: 'p-2',
+    title: 'Cold-Pressed Olive Oil',
+    description: 'First-press premium oil with laboratory-verified seed and acidity levels below 0.3%.',
+    price: 32.00,
+    category: 'direct',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDy2Z1HYnJh521cGqL4eaxJ4Q9kJzuiSz0lCs4gltLSg2-Db0k3uae8wO5VThERFDFvxUtfmReW6HqE1Eip1O-UjVdRorOpqWvvK3tCQ6mgn9r2DcvYu0I6IRIM29lgWY3Cfd0mkEMqitxmWzBLuTS74hUwdvUh-hKChv7yoXCG-zIVUnSXz6w3oWCBP6FFoOImz1OhjW3pJxvWvOI_NrI6OD9fbIRjpsSpTnUGmgZk_cQ6qR4iZeiyGPU-CyhWfThgECg2UGwpuw',
+    tag: 'Direct Sale'
+  },
+  {
+    id: 'p-3',
+    title: 'Pure Grade A Saffron',
+    description: 'Hand-picked filaments from controlled, high-density indoor agricultural environments.',
+    price: 89.90,
+    category: 'raw',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBm5zDXWo91yTpsN4kyxbWdkDEFrkpzIddn85d0UxtDy5dWFukCV4xhjPjzXfKqNNmMgKiBTUpPEZU5gdtodBQsHsIwi6ecgtT3686Ll7yFh1QdV-QSGDCj85fiJUyQLWPgEIaivO3nLh6MrlT41U4jDB4GZbIJTHMlG3pzm2VRNecnCJpa-7819pK6HaTMwVSb2sQEtFoPsfkhvYSrEk-Xsa5_O0fpUCdq4myxId5KtXYRo590jq9o1vXld3Uz4l7kJu8Q1BjZ7w',
+    tag: 'Raw Material'
+  }
+];
+
 export default function MarketView({ onNavigateToTab, cart, setCart }: MarketViewProps) {
   const [filterChip, setFilterChip] = useState<'all' | 'processed' | 'raw' | 'direct' | 'organic'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCartDrawer, setShowCartDrawer] = useState(false);
   const [showBundleModal, setShowBundleModal] = useState(false);
-
-  // Core product listings
-  const defaultProducts: Product[] = [
-    {
-      id: 'p-1',
-      title: 'Highland Arabica',
-      description: 'Cold-pressed and sun-dried beans harvested from high-altitude precision specialty farms.',
-      price: 24.50,
-      category: 'processed',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC8bzYvPFHxTePmKS8k-M2DhmWFFcDEBktnn9RpnwdVE8W_E2WiFxgU8vv7Yhvz346HXWbYYwEBxoRsON8qDUule-1dk-AHZUmHBUVAXus_oC5E3UCS_kLLt9bK_cL0XLGYbzOqAgTCImMMh7uNUJZeau-LnibmJSRdrtkVSUT6FJpy0IeO_cVmKDTAizPDAan9WhsPyVsaxsKYkdOGtne4CYBvGjilCOW020oO11D1cKTaKHHQECcxeNQYXkPIRmOFtL_31fQsYA',
-      tag: 'Processed'
-    },
-    {
-      id: 'p-2',
-      title: 'Cold-Pressed Olive Oil',
-      description: 'First-press premium oil with laboratory-verified seed and acidity levels below 0.3%.',
-      price: 32.00,
-      category: 'direct',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDy2Z1HYnJh521cGqL4eaxJ4Q9kJzuiSz0lCs4gltLSg2-Db0k3uae8wO5VThERFDFvxUtfmReW6HqE1Eip1O-UjVdRorOpqWvvK3tCQ6mgn9r2DcvYu0I6IRIM29lgWY3Cfd0mkEMqitxmWzBLuTS74hUwdvUh-hKChv7yoXCG-zIVUnSXz6w3oWCBP6FFoOImz1OhjW3pJxvWvOI_NrI6OD9fbIRjpsSpTnUGmgZk_cQ6qR4iZeiyGPU-CyhWfThgECg2UGwpuw',
-      tag: 'Direct Sale'
-    },
-    {
-      id: 'p-3',
-      title: 'Pure Grade A Saffron',
-      description: 'Hand-picked filaments from controlled, high-density indoor agricultural environments.',
-      price: 89.90,
-      category: 'raw',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBm5zDXWo91yTpsN4kyxbWdkDEFrkpzIddn85d0UxtDy5dWFukCV4xhjPjzXfKqNNmMgKiBTUpPEZU5gdtodBQsHsIwi6ecgtT3686Ll7yFh1QdV-QSGDCj85fiJUyQLWPgEIaivO3nLh6MrlT41U4jDB4GZbIJTHMlG3pzm2VRNecnCJpa-7819pK6HaTMwVSb2sQEtFoPsfkhvYSrEk-Xsa5_O0fpUCdq4myxId5KtXYRo590jq9o1vXld3Uz4l7kJu8Q1BjZ7w',
-      tag: 'Raw Material'
-    }
-  ];
 
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -107,7 +107,12 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
     };
     const updated = [product, ...products];
     setProducts(updated);
-    localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+    try {
+      localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+    } catch (err) {
+      console.error('Failed to save to localStorage', err);
+      alert('Gagal menyimpan: kapasitas memori penuh karena gambar terlalu besar.');
+    }
     setShowAddModal(false);
     setNewProduct({ title: '', price: '', totalHarvest: '', description: '', address: '', image: '' });
   };
@@ -115,7 +120,11 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
   const handleDeleteProduct = (id: string) => {
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
-    localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+    try {
+      localStorage.setItem('marketProducts', JSON.stringify(updated.filter(p => p.sellerName)));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
