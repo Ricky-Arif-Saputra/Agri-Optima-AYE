@@ -74,7 +74,13 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setProducts([...parsed, ...defaultProducts]);
+        if (Array.isArray(parsed)) {
+          // Filter out invalid items just in case
+          const validParsed = parsed.filter(p => p && typeof p === 'object' && p.id);
+          setProducts([...validParsed, ...defaultProducts]);
+        } else {
+          setProducts(defaultProducts);
+        }
       } catch (e) {
         setProducts(defaultProducts);
       }
@@ -160,9 +166,12 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
 
   // Filtering products
   const filteredProducts = products.filter(p => {
+    if (!p) return false;
     const matchesCategory = filterChip === 'all' || p.category === filterChip;
-    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const title = p.title || '';
+    const description = p.description || '';
+    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -290,7 +299,7 @@ export default function MarketView({ onNavigateToTab, cart, setCart }: MarketVie
 
                   <div className="border-t border-gray-100 pt-4 mt-auto flex items-center justify-between">
                     <span className="font-serif text-xl font-extrabold text-[#002d1a] font-mono">
-                      ${product.price.toFixed(2)}
+                      ${Number(product.price || 0).toFixed(2)}
                       <span className="text-[10px] font-sans font-medium text-gray-500 ml-0.5">/unit</span>
                     </span>
                     <button 
