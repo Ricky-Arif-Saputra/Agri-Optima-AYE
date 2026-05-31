@@ -15,6 +15,7 @@ interface Order {
   item: string;
   quantity: number;
   isGroup: boolean;
+  selectedDates?: string[];
   address: string;
   total: number;
   timestamp: string;
@@ -40,6 +41,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
   const [activeTab, setActiveTab] = useState<string>('farm');
   const [quantity, setQuantity] = useState<number>(1);
   const [isGroup, setIsGroup] = useState<boolean>(false);
+  const [selectedDates, setSelectedDates] = useState<string[]>(['']);
   const [address, setAddress] = useState<string>('');
 
   // Modal flow flags
@@ -78,6 +80,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     setSelectedItem(null);
     setQuantity(1);
     setIsGroup(false);
+    setSelectedDates(['']);
     setAddress('');
     setShowPaymentModal(false);
     setShowQRCode(false);
@@ -88,10 +91,20 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     setViewMode('list');
   };
 
+  const handleQuantityChange = (val: number) => {
+    const newQty = val > 0 ? val : 1;
+    setQuantity(newQty);
+    setSelectedDates(prev => {
+      if (prev.length === newQty) return prev;
+      if (prev.length < newQty) return [...prev, ...Array(newQty - prev.length).fill('')];
+      return prev.slice(0, newQty);
+    });
+  };
+
   const calculateTotal = () => {
     if (!selectedItem) return 0;
     const base = selectedItem.price * quantity;
-    if (isGroup && quantity >= 5) return Math.round(base * 0.9);
+    if (section === 'bahan' && isGroup && quantity >= 5) return Math.round(base * 0.9);
     return base;
   };
 
@@ -101,7 +114,8 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
       id: `order-${Date.now()}`,
       item: selectedItem!.name,
       quantity,
-      isGroup,
+      isGroup: section === 'bahan' ? isGroup : false,
+      selectedDates: section !== 'bahan' ? selectedDates : undefined,
       address,
       total,
       timestamp: new Date().toISOString(),
@@ -140,7 +154,11 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
     const order = orderHistory.find(o => o.id === currentOrderId);
     if (!order) return;
     const waNumber = '6285731274203';
-    const message = `Halo, saya ingin mengonfirmasi pesanan:\n- Produk: ${order.item}\n- Jumlah: ${order.quantity}${order.isGroup ? ' (group)' : ''}\n- Total: Rp${order.total.toLocaleString()}\n- Alamat: ${order.address}\n- Nomor Pembayaran: ${order.paymentNumber || '-'}\n- Tanggal: ${new Date(order.timestamp).toLocaleString()}`;
+    let message = `Halo, saya ingin mengonfirmasi pesanan:\n- Produk: ${order.item}\n- Jumlah: ${order.quantity}${order.isGroup ? ' (group)' : (order.selectedDates ? ' Hari' : '')}\n`;
+    if (order.selectedDates && order.selectedDates.length > 0) {
+      message += `- Tanggal Pelaksanaan:\n${order.selectedDates.map((d, i) => `  Hari ${i + 1}: ${d || '-'}`).join('\n')}\n`;
+    }
+    message += `- Total: Rp${order.total.toLocaleString()}\n- Alamat: ${order.address}\n- Nomor Pembayaran: ${order.paymentNumber || '-'}\n- Tanggal Pesan: ${new Date(order.timestamp).toLocaleString()}`;
     const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
     alert('Pesanan berhasil dikonfirmasi, silakan kirimkan bukti lewat WhatsApp.');
@@ -231,7 +249,7 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
                     <li key={o.id} className="bg-white border border-[#c1c8c1] rounded-xl p-4 shadow-sm flex justify-between items-center cursor-pointer hover:bg-emerald-50 transition-colors" onClick={() => setSelectedOrder(o)}>
                       <div>
                         <p className="font-bold text-[#002d1a] text-lg">{o.item}</p>
-                        <p className="text-sm text-gray-500 mt-1">Kuantitas: {o.quantity}{o.isGroup ? ' (Pembelian Grup)' : ' (Perorangan)'}</p>
+                        <p className="text-sm text-gray-500 mt-1">Kuantitas: {o.quantity}{o.isGroup ? ' (Pembelian Grup)' : (o.selectedDates ? ' Hari' : ' (Perorangan)')}</p>
                         <p className="text-xs text-gray-400 mt-1">{new Date(o.timestamp).toLocaleString('id-ID')}</p>
                       </div>
                       <span className="font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">Rp{o.total.toLocaleString()}</span>
@@ -266,23 +284,43 @@ export default function FarmView({ onNavigateToTab, efficiencyVal, setEfficiency
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-semibold text-emerald-800 mb-2">Jumlah Pesanan</label>
-                    <input type="number" min={1} value={quantity} onChange={e => setQuantity(parseInt(e.target.value) || 1)} className="w-full border border-emerald-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm transition-all" />
+                    <label className="block text-sm font-semibold text-emerald-800 mb-2">{section === 'bahan' ? 'Jumlah Pesanan' : 'Jumlah Hari'}</label>
+                    <input type="number" min={1} value={quantity} onChange={e => handleQuantityChange(parseInt(e.target.value) || 1)} className="w-full border border-emerald-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm transition-all" />
                   </div>
-                  <div className="flex flex-col justify-center">
-                    <label className="block text-sm font-semibold text-emerald-800 mb-2">Sistem Pembelian</label>
-                    <label className="flex items-center cursor-pointer group">
-                      <div className="relative">
-                        <input type="checkbox" checked={isGroup} onChange={e => setIsGroup(e.target.checked)} className="sr-only" />
-                        <div className={`block w-14 h-8 rounded-full transition-colors ${isGroup ? 'bg-emerald-600' : 'bg-gray-300'}`}></div>
-                        <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isGroup ? 'transform translate-x-6' : ''}`}></div>
-                      </div>
-                      <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-emerald-700 transition-colors">
-                        Grup <span className="text-xs text-emerald-600 font-bold bg-emerald-100 px-2 py-0.5 rounded-full ml-1">Diskon 10% (≥5)</span>
-                      </span>
-                    </label>
-                  </div>
+                  {section === 'bahan' && (
+                    <div className="flex flex-col justify-center">
+                      <label className="block text-sm font-semibold text-emerald-800 mb-2">Sistem Pembelian</label>
+                      <label className="flex items-center cursor-pointer group">
+                        <div className="relative">
+                          <input type="checkbox" checked={isGroup} onChange={e => setIsGroup(e.target.checked)} className="sr-only" />
+                          <div className={`block w-14 h-8 rounded-full transition-colors ${isGroup ? 'bg-emerald-600' : 'bg-gray-300'}`}></div>
+                          <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${isGroup ? 'transform translate-x-6' : ''}`}></div>
+                        </div>
+                        <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-emerald-700 transition-colors">
+                          Grup <span className="text-xs text-emerald-600 font-bold bg-emerald-100 px-2 py-0.5 rounded-full ml-1">Diskon 10% (≥5)</span>
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
+
+                {section !== 'bahan' && (
+                  <div className="mt-2 mb-2">
+                    <label className="block text-sm font-semibold text-emerald-800 mb-3">Tanggal Pelaksanaan</label>
+                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                      {selectedDates.map((date, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <span className="text-sm font-bold text-emerald-700 w-16 bg-emerald-100 py-2 text-center rounded-lg">Hari {index + 1}</span>
+                          <input type="date" value={date} onChange={e => {
+                            const newDates = [...selectedDates];
+                            newDates[index] = e.target.value;
+                            setSelectedDates(newDates);
+                          }} className="flex-1 border border-emerald-200 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white shadow-sm transition-all text-sm text-gray-700" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div>
                   <label className="block text-sm font-semibold text-emerald-800 mb-2">Alamat Pengiriman</label>
